@@ -1,0 +1,47 @@
+Steps before running IssueInitCloseToken/IssueCloseToken
+  Generate wallet and wallet keys
+    wallet should contain the payback key pair for this transaction
+    wallet should contain the public and private revocation key pair
+    Balances
+  Generate wallet commitment
+
+
+Establish. IssueInitCloseToken
+  wpk, wsk, t, close-msg_w 
+
+MPC Inputs:
+
+  tx_input:
+    Previous Tx: <Hash of Funding Tx>
+    Index: 0
+    scriptSig: < Sig 1 > < Sig 2 >
+  tx_output:
+    Index: 0
+    Value: Whatever
+    scriptPubKey: 
+      Pay to Merchant Public Key 
+
+    Index: 1
+    Value: Whatever
+    scriptPubKey: 
+      OP_IF
+          # Penalty transaction
+          <revocationpubkey>  (This is associate with this wallet)
+      OP_ELSE
+          `to_self_delay`
+          OP_CHECKSEQUENCEVERIFY
+          OP_DROP
+          <local_delayedpubkey> (This is associated with this wallet)
+      OP_ENDIF
+      OP_CHECKSIG
+
+  Other Checks:
+    Verify public inputs (unless this is easily supported by the framework?)
+    Make sure the commitment input by each player is to the same wallet, and matches the other inputs
+    Make sure the recovationpubkey matches the private key in the wallet being signed
+      + add in the wallet and verify the commitment into the mpc protocol
+    Scripts/formatting are correct
+    input hash matches the funding transaction
+
+  Ops: Signed 
+    Generate a signature in the scriptSig of tx_input[0] that will be checked with OP_CHECKMULTISIG
