@@ -26,7 +26,11 @@ MPC Inputs:
     scriptPubKey: 
       OP_IF
           # Penalty transaction
-          <revocationpubkey>  (This is associate with this wallet)
+          2
+          <revocationpubkey>  (This is associate with this wallet)  [THIS NEEDS TO CHANGE]
+          <Mechant Key>
+          2
+          OP_CHECKMULTISIG
       OP_ELSE
           `to_self_delay`
           OP_CHECKSEQUENCEVERIFY
@@ -35,6 +39,12 @@ MPC Inputs:
       OP_ENDIF
       OP_CHECKSIG
 
+    Index: 2
+    Value: 0
+    scriptPubKey:
+      channel_pk OP_RETURN
+
+
   Other Checks:
     Verify public inputs (unless this is easily supported by the framework?)
     Make sure the commitment input by each player is to the same wallet, and matches the other inputs
@@ -42,6 +52,8 @@ MPC Inputs:
       + add in the wallet and verify the commitment into the mpc protocol
     Scripts/formatting are correct
     input hash matches the funding transaction
+
+    Verify the continuity of the wallets
 
   Ops: Signed 
     Generate a signature in the scriptSig of tx_input[0] that will be checked with OP_CHECKMULTISIG
