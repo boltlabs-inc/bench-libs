@@ -12,37 +12,36 @@ Establish. IssueInitCloseToken
 MPC Inputs:
 
   tx_input:
-    Previous Tx: <Hash of Funding Tx>
+    Previous Tx: <Hash of Escrow-Tx>   [WE NEED ONE OF THESE FOR THE FUNDING TX AND ONE FOR THE MERCHANT-CLOSE-TX]
     Index: 0
-    scriptSig: < Sig 1 > < Sig 2 >
+    scriptSig: < Sig 1 > < Sig 2 > 
   tx_output:
     Index: 0
-    Value: Whatever
+    Value: Whatever [Balance Merchant init]
     scriptPubKey: 
-      Pay to Merchant Public Key 
+      Pay to Merchant Public Key [Could be controlled by the merchant]
 
     Index: 1
     Value: Whatever
     scriptPubKey: 
       OP_IF
           # Penalty transaction
-          2
-          <revocationpubkey>  (This is associate with this wallet)  [THIS NEEDS TO CHANGE]
-          <Mechant Key>
-          2
-          OP_CHECKMULTISIG
+          <wallet public key> ----> In the bitcoin case this is literally wpk_i
+          OP_CHECKSIGVERIFY
+          OP_DROP
+          <Merchant Key>
       OP_ELSE
           `to_self_delay`
           OP_CHECKSEQUENCEVERIFY
           OP_DROP
-          <local_delayedpubkey> (This is associated with this wallet)
+          <public key owned by customer> [This thing is not checked]
       OP_ENDIF
       OP_CHECKSIG
 
     Index: 2
     Value: 0
     scriptPubKey:
-      channel_pk OP_RETURN
+      channel_pk OP_RETURN [What is the channel_pk]
 
 
   Other Checks:
