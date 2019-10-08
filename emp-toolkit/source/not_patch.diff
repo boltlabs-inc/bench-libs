@@ -1,0 +1,39 @@
+diff --git a/emp-tool/circuits/integer.h b/emp-tool/circuits/integer.h
+index 52e79bb..0d6787a 100644
+--- a/emp-tool/circuits/integer.h
++++ b/emp-tool/circuits/integer.h
+@@ -67,6 +67,7 @@ class Integer : public Swappable<Integer>, public Comparable<Integer> { public:
+ 	Integer operator+(const Integer& rhs)const;
+ 	Integer operator-(const Integer& rhs)const;
+ 	Integer operator-()const;
++    Integer operator~()const;
+ 	Integer operator*(const Integer& rhs)const;
+ 	Integer operator/(const Integer& rhs)const;
+ 	Integer operator%(const Integer& rhs)const;
+diff --git a/emp-tool/circuits/integer.hpp b/emp-tool/circuits/integer.hpp
+index c7cc833..597bae7 100644
+--- a/emp-tool/circuits/integer.hpp
++++ b/emp-tool/circuits/integer.hpp
+@@ -337,7 +337,6 @@ inline Integer Integer::operator-(const Integer& rhs) const {
+ 	return res;
+ }
+ 
+-
+ inline Integer Integer::operator*(const Integer& rhs) const {
+ 	assert(size() == rhs.size());
+ 	Integer res(*this);
+@@ -370,6 +369,14 @@ inline Integer Integer::operator-() const {
+ 	return Integer(size(), 0, PUBLIC)-(*this);
+ }
+ 
++inline Integer Integer::operator~() const {
++    Integer res(*this);
++    for(int i = 0; i < size(); ++i)
++        res.bits[i] = !res.bits[i];
++    return res;
++}
++
++
+ //Others
+ inline Integer Integer::leading_zeros() const {
+ 	Integer res = *this;

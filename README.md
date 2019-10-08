@@ -1,6 +1,6 @@
 This repo is for benchmarking!
 
-Current purpose is to compare two approaches for using MPC techniques. [EMP-toolkit](https://github.com/emp-toolkit) implements traditional 2-party garbled circuit based MPC protocols, including a maliciously secure version that we're itnerested in.
+Current purpose is to compare two approaches for using MPC techniques. [EMP-toolkit](https://github.com/emp-toolkit) implements traditional 2-party garbled circuit based MPC protocols, including a maliciously secure version that we're interested in.
 [ZKBoo++](https://github.com/vanchope/ZKBOOpp) implements MPC in the head, a zero-knowledge proof technique where the prover reveals transcripts of an MPC computation they executed locally (``in their head''), which the verifier can audit to find signs of cheating.
 
 In both cases, we'll need to compute at least a signature. The `benchmark.py` script tests overall runtime for computing SHA256 hashes and also breaks down each computation into offline (pre-computable) and online timings.
