@@ -4,9 +4,9 @@ point_x = cint.public_input()
 
 hashed_message = sint.get_private_input_from(0)
 merchant_secret_key = sint.get_private_input_from(1)
-k = sint.get_private_input_from(1). # We could explicitly just get a random value
-k_inverse = sint.get_private_input_from(1) # k_inverse = k.inv()
+k = sint.get_private_input_from(1) # We could explicitly just get a random value
+k_inv = sint.get_private_input_from(1) # k_inverse = k.inv()
 
 output_signature = k_inv * (hashed_message + point_x * merchant_secret_key)
 
-print_ln("Signature: %d", output_signature.reveal()) # TODO have to undo the mapping back into Z_p
+print_ln("Signature: %s", output_signature.reveal()) # TODO have to undo the mapping back into Z_p
