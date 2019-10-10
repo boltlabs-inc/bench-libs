@@ -5,6 +5,12 @@ git clone https://github.com/KULeuven-COSIC/SCALE-MAMBA.git
 cd SCALE-MAMBA
 git checkout -b MPCSOK d7c960afd
 cp /root/source/CONFIG.mine .
+cp /root/io_patch/IO.h src/Input_Output/.
+cp /root/io_patch/Input_Output_File.cpp src/Input_Output/.
+cp /root/io_patch/Input_Output_File.h src/Input_Output/.
+cp /root/io_patch/Player.cpp .
+cp /root/data/Player*_in.dat Data/.
+cp /root/data/Player*_out.dat Data/.
 make -j$(nproc) progs
 
 # set up certificate authority

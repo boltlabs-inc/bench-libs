@@ -21,6 +21,8 @@ ADD install_dependencies.sh .
 RUN ["bash", "install_dependencies.sh"]
 
 ADD source/ /root/source
+ADD io_patch /root/io_patch
+ADD data /root/data
 ADD install.sh .
 RUN ["bash", "install.sh"]
 
