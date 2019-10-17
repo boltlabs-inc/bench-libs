@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y \
   vim \
   wget \
   yasm \
-  zip
+  zip \
+  gdb \
+  tmux
 
 ADD install_dependencies.sh .
 RUN ["bash", "install_dependencies.sh"]
