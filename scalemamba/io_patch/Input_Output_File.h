@@ -24,6 +24,7 @@ using namespace std;
 class Input_Output_File : public Input_Output_Base
 {
   istream *fin;
+  istream *fin_public;
   ostream *fout;
 
   bool human; // Only affects share output
@@ -35,9 +36,10 @@ public:
     ;
   }
 
-  void init(istream &f_in, ostream &f_out, bool human_type)
+  void init(istream &f_in, istream &f_in_public, ostream &f_out, bool human_type)
   {
     fin = &f_in;
+    fin_public = &f_in_public;
     fout = &f_out;
     human= human_type;
   }

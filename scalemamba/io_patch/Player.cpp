@@ -365,11 +365,13 @@ int main(int argc, const char *argv[])
   // Here you configure the IO in the machine
   //  - This depends on what IO machinary you are using
   //  - Here we are just using the simple IO class
-  unique_ptr<Input_Output_Simple> io(new Input_Output_File);
-  ifstream fin; ofstream fout;
+  unique_ptr<Input_Output_File> io(new Input_Output_File);
+  ifstream fin; ifstream fin_public; ofstream fout;
   fin.open("Data/Player" + std::to_string(my_number) + "_in.dat");
+  fin_public.open("Data/Player" + std::to_string(my_number) + "_in_pub.dat");
   fout.open("Data/Player" + std::to_string(my_number) + "_out.dat");
-  io->init(in, fout, true);
+  io->init(fin, fin_public, fout, true);
+
   machine.Setup_IO(std::move(io));
 
   // Load the initial tapes for the first program into the schedule

@@ -39,9 +39,9 @@ void Input_Output_File::private_output_gfp(const gfp &output, unsigned int chann
 
 gfp Input_Output_File::public_input_gfp(unsigned int channel)
 {
-  cout << "Enter value on channel " << channel << " : ";
+  // cout << "Enter value on channel " << channel << " : ";
   word x;
-  cin >> x;
+  (*fin_public) >> x;
   gfp y;
   y.assign(x);
 
@@ -60,9 +60,9 @@ void Input_Output_File::public_output_gfp(const gfp &output, unsigned int channe
 
 long Input_Output_File::public_input_int(unsigned int channel)
 {
-  cout << "Enter value on channel " << channel << " : ";
+  // cout << "Enter value on channel " << channel << " : ";
   long x;
-  cin >> x;
+  (*fin_public) >> x;
 
   // Important to have this call in each version of public_input_gfp
   Update_Checker(x, channel);
@@ -83,7 +83,7 @@ void Input_Output_File::output_share(const Share &S, unsigned int channel)
 
 Share Input_Output_File::input_share(unsigned int channel)
 {
-  cout << "Enter value on channel " << channel << " : ";
+  // cout << "Enter value on channel " << channel << " : ";
   Share S;
   S.input(*fin, human);
   return S;

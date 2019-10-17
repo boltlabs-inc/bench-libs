@@ -8,8 +8,9 @@ cp /root/source/CONFIG.mine .
 cp /root/io_patch/IO.h src/Input_Output/.
 cp /root/io_patch/Input_Output_File.cpp src/Input_Output/.
 cp /root/io_patch/Input_Output_File.h src/Input_Output/.
-cp /root/io_patch/Player.cpp .
+cp /root/io_patch/Player.cpp src/.
 cp /root/data/Player*_in.dat Data/.
+cp /root/data/Player*_in_pub.dat Data/.
 cp /root/data/Player*_out.dat Data/.
 make -j$(nproc) progs
 
