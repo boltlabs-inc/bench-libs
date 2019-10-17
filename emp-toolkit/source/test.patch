@@ -1,0 +1,91 @@
+diff --git a/test/sha256.cpp b/test/sha256.cpp
+index 638e55e..9133699 100644
+--- a/test/sha256.cpp
++++ b/test/sha256.cpp
+@@ -3,12 +3,47 @@
+ using namespace std;
+ using namespace emp;
+ 
++const int NUM_TESTS = 4;
++const string in_strings[NUM_TESTS] = {
++"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
++"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
++"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
++"243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c89452821e638d01377be5466cf34e90c6cc0ac29b7c97c50dd3f84d5b5b5470917"};
++
++const string results[NUM_TESTS] = {
++  "da5698be17b9b46962335799779fbeca8ce5d491c0d26243bafef9ea1837a9d8",
++  "fc99a2df88f42a7a7bb9d18033cdc6a20256755f9d5b9a5044a9cc315abe84a7",
++  "ef0c748df4da50a8d6c43c013edc3ce76c9d9fa9a1458ade56eb86c0a64492d2",
++  "cf0ae4eb67d38ffeb94068984b22abde4e92bc548d14585e48dca8882d7b09ce" };
++
+ int main(int argc, char** argv) {
+ 	int party, port;
+ 	parse_party_and_port(argv, &party, &port);
+ 	NetIO* io = new NetIO(party==ALICE ? nullptr:IP, port);
+ 	io->set_nodelay();
+-	test(party, io, circuit_file_location+"sha-256.txt", "da5698be17b9b46962335799779fbeca8ce5d491c0d26243bafef9ea1837a9d8");
++
++    int t = 0;
++    if (argc == 4) {
++      t = atoi(argv[3]);
++      if (t < 0 || t >= NUM_TESTS) {
++        cout << "invalid test id" << endl;
++        return 0;
++      }
++    }
++
++    cout << "testing input " << t << ": " << in_strings[t] << endl;
++
++    // convert input to bool array
++    string in = hex_to_binary(in_strings[t]);
++    bool *inb = new bool[in.length()];
++    for (int i=0; i<in.length(); i++) {
++      inb[i] = (in[i] == '1');
++    }
++
++    // call test code
++    test(party, io, circuit_file_location+"sha-256.txt", results[t], inb);
++      //"da5698be17b9b46962335799779fbeca8ce5d491c0d26243bafef9ea1837a9d8");
++
+ 	delete io;
+ 	return 0;
+ }
+diff --git a/test/single_execution.h b/test/single_execution.h
+index b3a450b..90a573a 100644
+--- a/test/single_execution.h
++++ b/test/single_execution.h
+@@ -4,7 +4,7 @@ using namespace std;
+ using namespace emp;
+ 
+ const string circuit_file_location = macro_xstr(EMP_CIRCUIT_PATH);
+-void test(int party, NetIO* io, string name, string check_output = "") {
++void test(int party, NetIO* io, string name, string check_output = "", bool *opt_in=NULL) {
+ 	string file = name;//circuit_file_location + name;
+ 	CircuitFile cf(file.c_str());
+ 	auto t1 = clock_start();
+@@ -22,9 +22,14 @@ void test(int party, NetIO* io, string name, string check_output = "") {
+ 	io->flush();
+ 	cout << "dep:\t"<<party<<"\t"<<time_from(t1)<<endl;
+ 
+-	bool *in = new bool[max(cf.n1, cf.n2)];
++    bool *in;
++    if (opt_in == NULL) {
++      in = new bool[max(cf.n1, cf.n2)];
++      memset(in, false, max(cf.n1, cf.n2));
++    } else {
++      in = opt_in;
++    }
+ 	bool * out = new bool[cf.n3];
+-	memset(in, false, max(cf.n1, cf.n2));
+ 	memset(out, false, cf.n3);
+ 	t1 = clock_start();
+ 	twopc.online(in, out);
+@@ -35,6 +40,7 @@ void test(int party, NetIO* io, string name, string check_output = "") {
+ 			res += (out[i]?"1":"0");
+ 		cout << (res == hex_to_binary(check_output)? "GOOD!":"BAD!")<<endl;
+ 	}
+
+ 	delete[] in;
+ 	delete[] out;
+ }
