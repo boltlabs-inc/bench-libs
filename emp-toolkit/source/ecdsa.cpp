@@ -6,6 +6,8 @@ using namespace std;
 #define MERCH ALICE
 #define CUST BOB
 
+const int BITS = 256;
+
 struct ECDSA_sig {
   Integer rx;
   Integer ry;
@@ -19,6 +21,20 @@ Integer signature_hash(Integer m) {
   return m;
 }
 
+void get_ECDSA_params(string *q) {
+  string qhex = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141";
+  string qbin = hex_to_binary(qhex);
+  // figure out how they represent numbers
+  // there seems to be some kind of negative thing going on here
+  *q = bin_to_dec(qbin);
+}
+
+// ecdsa-signs a message based on the given parameters
+// parameters here are appended -c because they're in the clear
+// q : subgroup order
+// rx, ry : public key point on curve
+// sk : private key integer
+// ki : private key
 struct ECDSA_sig ecdsa_sign(int qc, int rxc, int ryc,
                      int skc, int kic,
                      int mc) {
@@ -26,19 +42,23 @@ struct ECDSA_sig ecdsa_sign(int qc, int rxc, int ryc,
   // shared inputs: ECDSA params
   // q is public
   // (r_x, r_y) = k*G. merchant chooses k and shares these in the clear
-  Integer q(32, qc, PUBLIC);
-  Integer rx(32, rxc, PUBLIC);
-  Integer ry(32, ryc, PUBLIC);
+  string qcs;
+  get_ECDSA_params(&qcs);
+  cout << "new q:" << qcs << endl;
+  Integer q(BITS, qcs, PUBLIC);
+  cout << "recycled: " << q.reveal<string>(PUBLIC) << endl;
+  Integer rx(BITS, rxc, PUBLIC);
+  Integer ry(BITS, ryc, PUBLIC);
 
   // merchant inputs
   // sk : r_x * x mod q
   // k_inv : inverse of k (explained above)
-  Integer sk(32, skc, MERCH);
-  Integer k_inv(32, kic, MERCH);
+  Integer sk(BITS, skc, MERCH);
+  Integer k_inv(BITS, kic, MERCH);
 
   // customer inputs
   // m : message
-  Integer m(32, mc, CUST);
+  Integer m(BITS, mc, CUST);
 
   // question: can we compute hash as a mod value or do we compute it as larger numbers
   // and then mod later?
