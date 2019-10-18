@@ -1,13 +1,10 @@
-SHA_BLOCKSIZE = 64
-SHA_DIGESTSIZE = 32
-
-# digest = sregint.Array(8)
+# digest = Array(8, sregint)
 # count_lo = sregint(0)
 # count_hi = sregint(0)
-# data = sregint.Array(SHA_BLOCKSIZE)
+# data = Array(SHA_BLOCKSIZE, sregint)
 # local = sregint(0)
 # digestsize = sregint(0)
-# final_data = sregint.Array(SHA_BLOCKSIZE)
+# final_data = Array(SHA_BLOCKSIZE, sregint)
 
 
 def ROR(x, y):
@@ -45,8 +42,8 @@ def RND(a,b,c,d,e,f,g,h,i,Wi,ki):
     return d & 0xffffffff, h & 0xffffffff
 
 def sha_transform(digest, data_chunk):
-    # W = sregint.Array(64)
-    W = [0]*64
+    W = Array(64, sregint)
+    # W = [0]*64
     
     # for i in range(0,16):
     #     W.append( (d[4*i]<<24) + (d[4*i+1]<<16) + (d[4*i+2]<<8) + d[4*i+3])
@@ -71,57 +68,57 @@ def sha_transform(digest, data_chunk):
     # for i in range(16,64):
     #     W.append( (Gamma1(W[i - 2]) + W[i - 7] + Gamma0(W[i - 15]) + W[i - 16]) & 0xffffffff )
     
-    W[16] =((Gamma1(W[14]) + W[9 ] + Gamma0(W[1] ) + W[0] ) & 0xffffffff)
-    W[17] =((Gamma1(W[15]) + W[10] + Gamma0(W[2] ) + W[1] ) & 0xffffffff)
-    W[18] =((Gamma1(W[16]) + W[11] + Gamma0(W[3] ) + W[2] ) & 0xffffffff)
-    W[19] =((Gamma1(W[17]) + W[12] + Gamma0(W[4] ) + W[3] ) & 0xffffffff)
-    W[20] =((Gamma1(W[18]) + W[13] + Gamma0(W[5] ) + W[4] ) & 0xffffffff)
-    W[21] =((Gamma1(W[19]) + W[14] + Gamma0(W[6] ) + W[5] ) & 0xffffffff)
-    W[22] =((Gamma1(W[20]) + W[15] + Gamma0(W[7] ) + W[6] ) & 0xffffffff)
-    W[23] =((Gamma1(W[21]) + W[16] + Gamma0(W[8] ) + W[7] ) & 0xffffffff)
-    W[24] =((Gamma1(W[22]) + W[17] + Gamma0(W[9] ) + W[8] ) & 0xffffffff)
-    W[25] =((Gamma1(W[23]) + W[18] + Gamma0(W[10]) + W[9] ) & 0xffffffff)
-    W[26] =((Gamma1(W[24]) + W[19] + Gamma0(W[11]) + W[10]) & 0xffffffff)
-    W[27] =((Gamma1(W[25]) + W[20] + Gamma0(W[12]) + W[11]) & 0xffffffff)
-    W[28] =((Gamma1(W[26]) + W[21] + Gamma0(W[13]) + W[12]) & 0xffffffff)
-    W[29] =((Gamma1(W[27]) + W[22] + Gamma0(W[14]) + W[13]) & 0xffffffff)
-    W[30] =((Gamma1(W[28]) + W[23] + Gamma0(W[15]) + W[14]) & 0xffffffff)
-    W[31] =((Gamma1(W[29]) + W[24] + Gamma0(W[16]) + W[15]) & 0xffffffff)
-    W[32] =((Gamma1(W[30]) + W[25] + Gamma0(W[17]) + W[16]) & 0xffffffff)
-    W[33] =((Gamma1(W[31]) + W[26] + Gamma0(W[18]) + W[17]) & 0xffffffff)
-    W[34] =((Gamma1(W[32]) + W[27] + Gamma0(W[19]) + W[18]) & 0xffffffff)
-    W[35] =((Gamma1(W[33]) + W[28] + Gamma0(W[20]) + W[19]) & 0xffffffff)
-    W[36] =((Gamma1(W[34]) + W[29] + Gamma0(W[21]) + W[20]) & 0xffffffff)
-    W[37] =((Gamma1(W[35]) + W[30] + Gamma0(W[22]) + W[21]) & 0xffffffff)
-    W[38] =((Gamma1(W[36]) + W[31] + Gamma0(W[23]) + W[22]) & 0xffffffff)
-    W[39] =((Gamma1(W[37]) + W[32] + Gamma0(W[24]) + W[23]) & 0xffffffff)
-    W[40] =((Gamma1(W[38]) + W[33] + Gamma0(W[25]) + W[24]) & 0xffffffff)
-    W[41] =((Gamma1(W[39]) + W[34] + Gamma0(W[26]) + W[25]) & 0xffffffff)
-    W[42] =((Gamma1(W[40]) + W[35] + Gamma0(W[27]) + W[26]) & 0xffffffff)
-    W[43] =((Gamma1(W[41]) + W[36] + Gamma0(W[28]) + W[27]) & 0xffffffff)
-    W[44] =((Gamma1(W[42]) + W[37] + Gamma0(W[29]) + W[28]) & 0xffffffff)
-    W[45] =((Gamma1(W[43]) + W[38] + Gamma0(W[30]) + W[29]) & 0xffffffff)
-    W[46] =((Gamma1(W[44]) + W[39] + Gamma0(W[31]) + W[30]) & 0xffffffff)
-    W[47] =((Gamma1(W[45]) + W[40] + Gamma0(W[32]) + W[31]) & 0xffffffff)
-    W[48] =((Gamma1(W[46]) + W[41] + Gamma0(W[33]) + W[32]) & 0xffffffff)
-    W[49] =((Gamma1(W[47]) + W[42] + Gamma0(W[34]) + W[33]) & 0xffffffff)
-    W[50] =((Gamma1(W[48]) + W[43] + Gamma0(W[35]) + W[34]) & 0xffffffff)
-    W[51] =((Gamma1(W[49]) + W[44] + Gamma0(W[36]) + W[35]) & 0xffffffff)
-    W[52] =((Gamma1(W[50]) + W[45] + Gamma0(W[37]) + W[36]) & 0xffffffff)
-    W[53] =((Gamma1(W[51]) + W[46] + Gamma0(W[38]) + W[37]) & 0xffffffff)
-    W[54] =((Gamma1(W[52]) + W[47] + Gamma0(W[39]) + W[38]) & 0xffffffff)
-    W[55] =((Gamma1(W[53]) + W[48] + Gamma0(W[40]) + W[39]) & 0xffffffff)
-    W[56] =((Gamma1(W[54]) + W[49] + Gamma0(W[41]) + W[40]) & 0xffffffff)
-    W[57] =((Gamma1(W[55]) + W[50] + Gamma0(W[42]) + W[41]) & 0xffffffff)
-    W[58] =((Gamma1(W[56]) + W[51] + Gamma0(W[43]) + W[42]) & 0xffffffff)
-    W[59] =((Gamma1(W[57]) + W[52] + Gamma0(W[44]) + W[43]) & 0xffffffff)
-    W[60] =((Gamma1(W[58]) + W[53] + Gamma0(W[45]) + W[44]) & 0xffffffff)
-    W[61] =((Gamma1(W[59]) + W[54] + Gamma0(W[46]) + W[45]) & 0xffffffff)
-    W[62] =((Gamma1(W[60]) + W[55] + Gamma0(W[47]) + W[46]) & 0xffffffff)
-    W[63] =((Gamma1(W[61]) + W[56] + Gamma0(W[48]) + W[47]) & 0xffffffff)
+    W[16] =((Gamma1(W[14]) + W[9 ] + Gamma0(W[1] ) + W[0] ) )#& 0xffffffff)
+    W[17] =((Gamma1(W[15]) + W[10] + Gamma0(W[2] ) + W[1] ) )#& 0xffffffff)
+    W[18] =((Gamma1(W[16]) + W[11] + Gamma0(W[3] ) + W[2] ) )#& 0xffffffff)
+    W[19] =((Gamma1(W[17]) + W[12] + Gamma0(W[4] ) + W[3] ) )#& 0xffffffff)
+    W[20] =((Gamma1(W[18]) + W[13] + Gamma0(W[5] ) + W[4] ) )#& 0xffffffff)
+    W[21] =((Gamma1(W[19]) + W[14] + Gamma0(W[6] ) + W[5] ) )#& 0xffffffff)
+    W[22] =((Gamma1(W[20]) + W[15] + Gamma0(W[7] ) + W[6] ) )#& 0xffffffff)
+    W[23] =((Gamma1(W[21]) + W[16] + Gamma0(W[8] ) + W[7] ) )#& 0xffffffff)
+    W[24] =((Gamma1(W[22]) + W[17] + Gamma0(W[9] ) + W[8] ) )#& 0xffffffff)
+    W[25] =((Gamma1(W[23]) + W[18] + Gamma0(W[10]) + W[9] ) )#& 0xffffffff)
+    W[26] =((Gamma1(W[24]) + W[19] + Gamma0(W[11]) + W[10]) )#& 0xffffffff)
+    W[27] =((Gamma1(W[25]) + W[20] + Gamma0(W[12]) + W[11]) )#& 0xffffffff)
+    W[28] =((Gamma1(W[26]) + W[21] + Gamma0(W[13]) + W[12]) )#& 0xffffffff)
+    W[29] =((Gamma1(W[27]) + W[22] + Gamma0(W[14]) + W[13]) )#& 0xffffffff)
+    W[30] =((Gamma1(W[28]) + W[23] + Gamma0(W[15]) + W[14]) )#& 0xffffffff)
+    W[31] =((Gamma1(W[29]) + W[24] + Gamma0(W[16]) + W[15]) )#& 0xffffffff)
+    W[32] =((Gamma1(W[30]) + W[25] + Gamma0(W[17]) + W[16]) )#& 0xffffffff)
+    W[33] =((Gamma1(W[31]) + W[26] + Gamma0(W[18]) + W[17]) )#& 0xffffffff)
+    W[34] =((Gamma1(W[32]) + W[27] + Gamma0(W[19]) + W[18]) )#& 0xffffffff)
+    W[35] =((Gamma1(W[33]) + W[28] + Gamma0(W[20]) + W[19]) )#& 0xffffffff)
+    W[36] =((Gamma1(W[34]) + W[29] + Gamma0(W[21]) + W[20]) )#& 0xffffffff)
+    W[37] =((Gamma1(W[35]) + W[30] + Gamma0(W[22]) + W[21]) )#& 0xffffffff)
+    W[38] =((Gamma1(W[36]) + W[31] + Gamma0(W[23]) + W[22]) )#& 0xffffffff)
+    W[39] =((Gamma1(W[37]) + W[32] + Gamma0(W[24]) + W[23]) )#& 0xffffffff)
+    W[40] =((Gamma1(W[38]) + W[33] + Gamma0(W[25]) + W[24]) )#& 0xffffffff)
+    W[41] =((Gamma1(W[39]) + W[34] + Gamma0(W[26]) + W[25]) )#& 0xffffffff)
+    W[42] =((Gamma1(W[40]) + W[35] + Gamma0(W[27]) + W[26]) )#& 0xffffffff)
+    W[43] =((Gamma1(W[41]) + W[36] + Gamma0(W[28]) + W[27]) )#& 0xffffffff)
+    W[44] =((Gamma1(W[42]) + W[37] + Gamma0(W[29]) + W[28]) )#& 0xffffffff)
+    W[45] =((Gamma1(W[43]) + W[38] + Gamma0(W[30]) + W[29]) )#& 0xffffffff)
+    W[46] =((Gamma1(W[44]) + W[39] + Gamma0(W[31]) + W[30]) )#& 0xffffffff)
+    W[47] =((Gamma1(W[45]) + W[40] + Gamma0(W[32]) + W[31]) )#& 0xffffffff)
+    W[48] =((Gamma1(W[46]) + W[41] + Gamma0(W[33]) + W[32]) )#& 0xffffffff)
+    W[49] =((Gamma1(W[47]) + W[42] + Gamma0(W[34]) + W[33]) )#& 0xffffffff)
+    W[50] =((Gamma1(W[48]) + W[43] + Gamma0(W[35]) + W[34]) )#& 0xffffffff)
+    W[51] =((Gamma1(W[49]) + W[44] + Gamma0(W[36]) + W[35]) )#& 0xffffffff)
+    W[52] =((Gamma1(W[50]) + W[45] + Gamma0(W[37]) + W[36]) )#& 0xffffffff)
+    W[53] =((Gamma1(W[51]) + W[46] + Gamma0(W[38]) + W[37]) )#& 0xffffffff)
+    W[54] =((Gamma1(W[52]) + W[47] + Gamma0(W[39]) + W[38]) )#& 0xffffffff)
+    W[55] =((Gamma1(W[53]) + W[48] + Gamma0(W[40]) + W[39]) )#& 0xffffffff)
+    W[56] =((Gamma1(W[54]) + W[49] + Gamma0(W[41]) + W[40]) )#& 0xffffffff)
+    W[57] =((Gamma1(W[55]) + W[50] + Gamma0(W[42]) + W[41]) )#& 0xffffffff)
+    W[58] =((Gamma1(W[56]) + W[51] + Gamma0(W[43]) + W[42]) )#& 0xffffffff)
+    W[59] =((Gamma1(W[57]) + W[52] + Gamma0(W[44]) + W[43]) )#& 0xffffffff)
+    W[60] =((Gamma1(W[58]) + W[53] + Gamma0(W[45]) + W[44]) )#& 0xffffffff)
+    W[61] =((Gamma1(W[59]) + W[54] + Gamma0(W[46]) + W[45]) )#& 0xffffffff)
+    W[62] =((Gamma1(W[60]) + W[55] + Gamma0(W[47]) + W[46]) )#& 0xffffffff)
+    W[63] =((Gamma1(W[61]) + W[56] + Gamma0(W[48]) + W[47]) )#& 0xffffffff)
 
-    # ss = sregint.Array(8)
-    ss = [0]*(8)
+    ss = Array(8, sregint)
+    # ss = [0]*(8)
     ss[0] = digest[0]
     ss[1] = digest[1]
     ss[2] = digest[2]
@@ -196,16 +193,16 @@ def sha_transform(digest, data_chunk):
     ss[5], ss[1] = RND(ss[2],ss[3],ss[4],ss[5],ss[6],ss[7],ss[0],ss[1],62,W[62],0xbef9a3f7);
     ss[4], ss[0] = RND(ss[1],ss[2],ss[3],ss[4],ss[5],ss[6],ss[7],ss[0],63,W[63],0xc67178f2);
 
-    digest[0] = (digest[0] + ss[0]) & 0xffffffff
-    digest[1] = (digest[1] + ss[1]) & 0xffffffff
-    digest[2] = (digest[2] + ss[2]) & 0xffffffff
-    digest[3] = (digest[3] + ss[3]) & 0xffffffff
-    digest[4] = (digest[4] + ss[4]) & 0xffffffff
-    digest[5] = (digest[5] + ss[5]) & 0xffffffff
-    digest[6] = (digest[6] + ss[6]) & 0xffffffff
-    digest[7] = (digest[7] + ss[7]) & 0xffffffff
+    digest[0] = (digest[0] + ss[0]) #& 0xffffffff
+    digest[1] = (digest[1] + ss[1]) #& 0xffffffff
+    digest[2] = (digest[2] + ss[2]) #& 0xffffffff
+    digest[3] = (digest[3] + ss[3]) #& 0xffffffff
+    digest[4] = (digest[4] + ss[4]) #& 0xffffffff
+    digest[5] = (digest[5] + ss[5]) #& 0xffffffff
+    digest[6] = (digest[6] + ss[6]) #& 0xffffffff
+    digest[7] = (digest[7] + ss[7]) #& 0xffffffff
     
-
+    # final_data = Array(SHA_BLOCKSIZE, sregint)
     # final_data = [0]*SHA_BLOCKSIZE
     # final_data[0] = ((digest[0]>>24) & 0xff)
     # final_data[1] = ((digest[0]>>16) & 0xff)
@@ -228,31 +225,9 @@ def sha_transform(digest, data_chunk):
     # final_data[15] = ( digest[3]      & 0xff)
 
 
-digest = [0]*8 # the buffer that will hold the ouptut
-msg_length = 18 # this is hardcoded.
-hi_bit_count = msg_length >> 29 # >>32 and tehn *8 (see below).  will always be zero
-lo_bit_count = msg_length << 3 # just *8 for the bytes to bits conversion
-data_length = (int((msg_length+1)/64) +1)*64
-data = [0]*SHA_BLOCKSIZE
-msg_data = [0]*data_length #must be a multiple of 512 (64*8)
 
-sha_input = b'just a test string'
-#Pack the initial data  
-# Should be the message, followed by x80 (a single 1 bit) followed by zeros until there are only 64 bits of space left
-# then append the 64bit big endian representation of the data to 
-for i,x in enumerate(sha_input):
-    msg_data[i] = x
-
-msg_data[msg_length] = 0x80
-
-msg_data[data_length-8] = (hi_bit_count >> 24) & 0xff
-msg_data[data_length-7] = (hi_bit_count >> 16) & 0xff
-msg_data[data_length-6] = (hi_bit_count >>  8) & 0xff
-msg_data[data_length-5] = (hi_bit_count >>  0) & 0xff
-msg_data[data_length-4] = (lo_bit_count >> 24) & 0xff
-msg_data[data_length-3] = (lo_bit_count >> 16) & 0xff
-msg_data[data_length-2] = (lo_bit_count >>  8) & 0xff
-msg_data[data_length-1] = (lo_bit_count >>  0) & 0xff
+digest = Array(8, sregint)
+#digest = sregint.Array(8)
 
 #Set the buffer initials
 digest[0] = 0x6A09E667
@@ -264,21 +239,45 @@ digest[5] = 0x9B05688C
 digest[6] = 0x1F83D9AB
 digest[7] = 0x5BE0CD19
 
-print("msg_data: " + ''.join(['%.2x' % i for i in msg_data]))
+msg_length = 100 #regint.public_input()
+hi_bit_count = msg_length >> 29 # >>32 and tehn *8 (see below).  will always be zero
+lo_bit_count = msg_length << 3 # just *8 for the bytes to bits conversion
+num_blocks = int((msg_length+1)/64) +1
+data_length = (num_blocks)*64
 
-for i in range(0, int(data_length/64)):
-    sha_transform(digest, msg_data[i*64:(i+1)*64])
+msg_data = Array(data_length, sregint)
+#msg_data = [ sregint(0) for _ in range(data_length)]
 
-print(''.join(['%.2x' % i for i in digest]))
+#Pack the initial data  
+# Should be the message, followed by x80 (a single 1 bit) followed by zeros until there are only 64 bits of space left
+# then append the 64bit big endian representation of the data to 
+for i in range(msg_length):
+    msg_data[i] = sregint(sint.get_private_input_from(0))
 
-# def test(digest, count_lo, count_hi, data, local, digestsize, final_data):
-#     a_str = b"just a test string"
-    
-#     assert 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' == sha256().hexdigest()
-#     assert 'd7b553c6f09ac85d142415f857c5310f3bbbe7cdd787cce4b985acedd585266f' == sha256(a_str).hexdigest()
-#     assert '8113ebf33c97daa9998762aacafe750c7cefc2b2f173c90c59663a57fe626f21' == sha256(a_str*7).hexdigest()
-    
-#     s = sha256(a_str)
-#     s.update(a_str)
-#     assert '03d9963e05a094593190b6fc794cb1a3e1ac7d7883f0b5855268afeccc70d461' == s.hexdigest()
+msg_data[msg_length] = 0x80
 
+for i in range(msg_length+1, data_length-8):
+    msg_data[i] = sregint(0)
+
+msg_data[data_length-8] = (hi_bit_count >> 24) # & 0xff
+msg_data[data_length-7] = (hi_bit_count >> 16) # & 0xff
+msg_data[data_length-6] = (hi_bit_count >>  8) # & 0xff
+msg_data[data_length-5] = (hi_bit_count >>  0) # & 0xff
+msg_data[data_length-4] = (lo_bit_count >> 24) # & 0xff
+msg_data[data_length-3] = (lo_bit_count >> 16) # & 0xff
+msg_data[data_length-2] = (lo_bit_count >>  8) # & 0xff
+msg_data[data_length-1] = (lo_bit_count >>  0) # & 0xff
+
+def loop_body(itr):
+    index = (num_blocks-itr)*64
+    data_to_be_processed = Array(64,sregint) #[sregint() for _ in range(64)]#
+    for i in range(64):
+        data_to_be_processed[i] = msg_data[index+i]
+    sha_transform(digest, data_to_be_processed)
+    return itr-1
+
+itr = cint(num_blocks)
+do_loop(itr, loop_body)
+
+for i in range(8):
+    sint(digest[i]).reveal_to(1)
