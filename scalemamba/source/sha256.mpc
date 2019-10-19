@@ -204,25 +204,25 @@ def sha_transform(digest, data_chunk):
     
     # final_data = Array(SHA_BLOCKSIZE, sregint)
     # final_data = [0]*SHA_BLOCKSIZE
-    # final_data[0] = ((digest[0]>>24) & 0xff)
-    # final_data[1] = ((digest[0]>>16) & 0xff)
-    # final_data[2] = ((digest[0]>>8 ) & 0xff)
-    # final_data[3] = ( digest[0]      & 0xff)
+    # final_data[0] = ((digest[0]>>24) )#& 0xff)
+    # final_data[1] = ((digest[0]>>16) )#& 0xff)
+    # final_data[2] = ((digest[0]>>8 ) )#& 0xff)
+    # final_data[3] = ( digest[0]      )#& 0xff)
 
-    # final_data[4] = ((digest[1]>>24) & 0xff)
-    # final_data[5] = ((digest[1]>>16) & 0xff)
-    # final_data[6] = ((digest[1]>>8 ) & 0xff)
-    # final_data[7] = ( digest[1]      & 0xff)
+    # final_data[4] = ((digest[1]>>24) )#& 0xff)
+    # final_data[5] = ((digest[1]>>16) )#& 0xff)
+    # final_data[6] = ((digest[1]>>8 ) )#& 0xff)
+    # final_data[7] = ( digest[1]      )#& 0xff)
 
-    # final_data[8]  = ((digest[2]>>24) & 0xff)
-    # final_data[9]  = ((digest[2]>>16) & 0xff)
-    # final_data[10] = ((digest[2]>>8 ) & 0xff)
-    # final_data[11] = ( digest[2]      & 0xff)
+    # final_data[8]  = ((digest[2]>>24) )#& 0xff)
+    # final_data[9]  = ((digest[2]>>16) )#& 0xff)
+    # final_data[10] = ((digest[2]>>8 ) )#& 0xff)
+    # final_data[11] = ( digest[2]      )#& 0xff)
 
-    # final_data[12] = ((digest[3]>>24) & 0xff)
-    # final_data[13] = ((digest[3]>>16) & 0xff)
-    # final_data[14] = ((digest[3]>>8 ) & 0xff)
-    # final_data[15] = ( digest[3]      & 0xff)
+    # final_data[12] = ((digest[3]>>24) )#& 0xff)
+    # final_data[13] = ((digest[3]>>16) )#& 0xff)
+    # final_data[14] = ((digest[3]>>8 ) )#& 0xff)
+    # final_data[15] = ( digest[3]      )#& 0xff)
 
 
 
