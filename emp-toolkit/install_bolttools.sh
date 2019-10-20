@@ -8,6 +8,14 @@
 # (currently broken, not slated for fixing b/c we don't need it)
 #mv ~/ripemd-160.cpp ~/emp-sh2pc/test/
 
+# add unsigned integers
+cd ~/emp-tool
+git apply ~/uint.patch
+mv ~/uinteger.h* emp-tool/circuits/
+mv ~/uint.cpp test/
+cmake .
+make uint # maybe need to do more to install it later
+
 cd ~/emp-sh2pc
 
 for TEST in ecdsa # ripemd-160
