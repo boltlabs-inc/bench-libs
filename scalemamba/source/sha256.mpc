@@ -224,8 +224,6 @@ def sha_transform(digest, data_chunk):
     # final_data[14] = ((digest[3]>>8 ) )#& 0xff)
     # final_data[15] = ( digest[3]      )#& 0xff)
 
-
-
 digest = Array(8, sregint)
 #digest = sregint.Array(8)
 
@@ -239,7 +237,7 @@ digest[5] = 0x9B05688C
 digest[6] = 0x1F83D9AB
 digest[7] = 0x5BE0CD19
 
-msg_length = 100 #regint.public_input()
+msg_length = 1 #regint.public_input()
 hi_bit_count = msg_length >> 29 # >>32 and tehn *8 (see below).  will always be zero
 lo_bit_count = msg_length << 3 # just *8 for the bytes to bits conversion
 num_blocks = int((msg_length+1)/64) +1
@@ -268,6 +266,9 @@ msg_data[data_length-3] = (lo_bit_count >> 16) # & 0xff
 msg_data[data_length-2] = (lo_bit_count >>  8) # & 0xff
 msg_data[data_length-1] = (lo_bit_count >>  0) # & 0xff
 
+# for i in range(data_length):
+#     print_ln('byte %s is %s', i, msg_data[i].reveal())
+
 def loop_body(itr):
     index = (num_blocks-itr)*64
     data_to_be_processed = Array(64,sregint) #[sregint() for _ in range(64)]#
@@ -280,4 +281,6 @@ itr = cint(num_blocks)
 do_loop(itr, loop_body)
 
 for i in range(8):
-    sint(digest[i]).reveal_to(1)
+    #The output format here is a little weird.  Calling hex(output) & ffffffff should work.  
+    #There appears to be a preappended 1
+    print_ln('Byte %s is %s', i, digest[i].reveal())
