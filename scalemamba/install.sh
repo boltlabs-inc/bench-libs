@@ -12,6 +12,8 @@ cp /root/io_patch/Player.cpp src/.
 cp /root/data/Player*_in.dat Data/.
 cp /root/data/Player*_in_pub.dat Data/.
 cp /root/data/Player*_out.dat Data/.
+cp /root/data/3PNetworkData.txt Data/.
+cp /root/data/3PShamirSharingData.txt Data/.
 make -j$(nproc) progs
 
 # set up certificate authority

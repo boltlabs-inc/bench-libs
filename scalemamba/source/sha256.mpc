@@ -280,14 +280,14 @@ def loop_body(itr):
 itr = cint(num_blocks)
 do_loop(itr, loop_body)
 
-digest[0] = digest[0] & 0xff
-digest[1] = digest[1] & 0xff
-digest[2] = digest[2] & 0xff
-digest[3] = digest[3] & 0xff
-digest[4] = digest[4] & 0xff
-digest[5] = digest[5] & 0xff
-digest[6] = digest[6] & 0xff
-digest[7] = digest[7] & 0xff
+digest[0] = digest[0] & 0xffffffff
+digest[1] = digest[1] & 0xffffffff
+digest[2] = digest[2] & 0xffffffff
+digest[3] = digest[3] & 0xffffffff
+digest[4] = digest[4] & 0xffffffff
+digest[5] = digest[5] & 0xffffffff
+digest[6] = digest[6] & 0xffffffff
+digest[7] = digest[7] & 0xffffffff
 
 for i in range(8):
     #The output format here is a little weird.  Calling hex(output) & ffffffff should work.  
