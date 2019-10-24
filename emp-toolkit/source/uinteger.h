@@ -60,10 +60,12 @@ class UInteger : public Swappable<UInteger>, public Comparable<UInteger> { publi
 	UInteger leading_zeros() const;
 	UInteger hamming_weight() const;
 
+    // TODO: add shifts by regular Ints
 	UInteger operator<<(int shamt)const;
 	UInteger operator>>(int shamt)const;
 	UInteger operator<<(const UInteger& shamt)const;
 	UInteger operator>>(const UInteger& shamt)const;
+    UInteger operator>>(const Integer& shamt)const;
 
 	UInteger operator+(const UInteger& rhs)const;
 	UInteger operator-(const UInteger& rhs)const;

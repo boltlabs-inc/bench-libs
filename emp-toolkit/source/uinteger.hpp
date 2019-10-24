@@ -154,14 +154,12 @@ inline UInteger::UInteger(int len, const string& str, int party) : length(len) {
 inline UInteger::UInteger(int len, long long input, int party)
 	: UInteger(len, std::to_string(input), party) {
 	}
-#if 0
-inline Integer Integer::select(const Bit & select, const Integer & a) const{
-	Integer res(*this);
+inline UInteger UInteger::select(const Bit & select, const UInteger & a) const{
+	UInteger res(*this);
 	for(int i = 0; i < size(); ++i)
 		res[i] = bits[i].select(select, a[i]);
 	return res;
 }
-#endif
 
 inline Bit& UInteger::operator[](int index) {
 	return bits[min(index, size()-1)];
@@ -268,9 +266,9 @@ inline UInteger UInteger::operator~() const {
   return res;
 }
 
-#if 0
-inline Integer Integer::operator<<(int shamt) const {
-	Integer res(*this);
+
+inline UInteger UInteger::operator<<(int shamt) const {
+	UInteger res(*this);
 	if(shamt > size()) {
 		for(int i = 0; i < size(); ++i)
 			res.bits[i] = false;
@@ -284,8 +282,8 @@ inline Integer Integer::operator<<(int shamt) const {
 	return res;
 }
 
-inline Integer Integer::operator>>(int shamt) const {
-	Integer res(*this);
+inline UInteger UInteger::operator>>(int shamt) const {
+	UInteger res(*this);
 	if(shamt >size()) {
 		for(int i = 0; i < size(); ++i)
 			res.bits[i] = false;
@@ -299,20 +297,21 @@ inline Integer Integer::operator>>(int shamt) const {
 	return res;
 }
 
-inline Integer Integer::operator<<(const Integer& shamt) const {
-	Integer res(*this);
+inline UInteger UInteger::operator<<(const UInteger& shamt) const {
+	UInteger res(*this);
 	for(int i = 0; i < min(int(ceil(log2(size()))) , shamt.size()-1); ++i)
 		res = res.select(shamt[i], res<<(1<<i));
 	return res;
 }
 
-inline Integer Integer::operator>>(const Integer& shamt) const{
-	Integer res(*this);
+inline UInteger UInteger::operator>>(const UInteger& shamt) const{
+	UInteger res(*this);
 	for(int i = 0; i <min(int(ceil(log2(size()))) , shamt.size()-1); ++i)
 		res = res.select(shamt[i], res>>(1<<i));
 	return res;
 }
 
+#if 0
 //Comparisons
 inline Bit Integer::geq (const Integer& rhs) const {
 	assert(size() == rhs.size());
@@ -345,15 +344,14 @@ inline UInteger UInteger::operator+(const UInteger & rhs) const {
 	return res;
 }
 
-#if 0
-inline Integer Integer::operator-(const Integer& rhs) const {
+inline UInteger UInteger::operator-(const UInteger& rhs) const {
 	assert(size() == rhs.size());
-	Integer res(*this);
+	UInteger res(*this);
 	sub_full(res.bits, nullptr, bits, rhs.bits, nullptr, size());
 	return res;
 }
 
-
+#if 0
 inline Integer Integer::operator*(const Integer& rhs) const {
 	assert(size() == rhs.size());
 	Integer res(*this);

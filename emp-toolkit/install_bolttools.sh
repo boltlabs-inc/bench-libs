@@ -17,12 +17,12 @@ cmake .
 make uint # maybe need to do more to install it later
 
 cd ~/emp-sh2pc
+mkdir build
 
-for TEST in ecdsa # ripemd-160
+for TEST in ecdsa sha2256 # ripemd-160
 do
   mv ~/$TEST.cpp test/
   echo "add_test ($TEST)" >> CMakeLists.txt
-  mkdir build
   cd build
   cmake ..
   make $TEST
