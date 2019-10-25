@@ -5,8 +5,11 @@ using namespace std;
 
 #define MERCH ALICE
 #define CUST BOB
-#define BITS 32
-#define BLOCKS 2
+//#define BITS 32
+//#define BLOCKS 2
+
+const int BITS = 32;
+const int BLOCKS = 2;
 
 /* implementation of SHA256 from FIPS PUB 180-4 
  * with the following modifications
@@ -220,6 +223,28 @@ void computeSHA256(uint message[BLOCKS][16], UInteger result[8]) {
 
 
 int main(int argc, char** argv) {
+  // generate circuit for use in malicious library
+  // this breaks and I don't know why --Marcella
+  if (argc == 2 && strcmp(argv[1], "-m") == 0 ) {
+
+    setup_plain_prot(true, "sha256.circuit.txt");
+    cout << "set up" << endl;
+
+    uint message[BLOCKS][16] = {0};
+    UInteger result[8];
+    computeSHA256(message, result);
+    for (int i=0; i<8; i++) {
+      result[i].reveal<uint>(PUBLIC);
+    }
+
+    cout << "finished my stuff" << endl;
+
+    finalize_plain_prot();
+     cout << "done" << endl;
+    return 0;
+  }
+
+  // otherwise, run in semihonest library
   int port, party;
   parse_party_and_port(argv, &party, &port);
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);

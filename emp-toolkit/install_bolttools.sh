@@ -15,17 +15,19 @@ mv ~/uinteger.h* emp-tool/circuits/
 mv ~/uint.cpp test/
 cmake .
 make uint # maybe need to do more to install it later
+make install
 
 cd ~/emp-sh2pc
 mkdir build
 
-for TEST in ecdsa sha2256 # ripemd-160
+for TEST in ecdsa sha256 # ripemd-160
 do
   mv ~/$TEST.cpp test/
   echo "add_test ($TEST)" >> CMakeLists.txt
   cd build
   cmake ..
   make $TEST
+  cd ..
 done
 
 # apply patch to update test code for ag2pc (it's broken)

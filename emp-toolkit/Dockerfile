@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 ADD install.sh .
 RUN ["bash", "install.sh"]
 ADD source/ .
-RUN ["bash", "install_ripemd.sh"]
+ADD install_bolttools.sh .
+RUN ["bash", "install_bolttools.sh"]
 CMD ["/bin/bash"]
 
