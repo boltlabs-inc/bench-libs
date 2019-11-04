@@ -9,7 +9,7 @@ using namespace std;
 //#define BLOCKS 2
 
 const int BITS = 32;
-const int BLOCKS = 2;
+const int BLOCKS = 1;
 
 /* implementation of SHA256 from FIPS PUB 180-4 
  * with the following modifications
@@ -162,22 +162,31 @@ void computeSHA256(uint message[BLOCKS][16], UInteger result[8]) {
   UInteger k[64];
   UInteger H[8];
   UInteger a,b,c,d,e,f,g,h;
+  UInteger w[BLOCKS][64];
+  // initialize message schedule
+  for (int i=0; i<BLOCKS; i++) {
+    for(size_t t=0; t<16; t++) {
+      // todo: figure out who the message belongs to
+      w[i][t] = UInteger(BITS, message[i][t], PUBLIC);
+    }
+  }
 
   initSHA256(k, H);
 
   for (int i=0; i<BLOCKS; i++) {
 
     // prepare message schedule
-    UInteger w[64];
 
     // 1. Prepare the message schedule, {Wt}
     for(size_t t = 0 ; t <= 63 ; t++)
     {
-      if( t<=15 )
-        // todo: figure out who the message belongs to
-        w[t] = UInteger(BITS, message[i][t], PUBLIC);
+      if( t<=15 ) {
+       // skip, we initialized this above 
+      }
       else
-        w[t] = SIGMA_LOWER_1(w[t-2]) + w[t-7] + SIGMA_LOWER_0(w[t-15]) + w[t-16];
+        // untested alert: maybe the message scheduling matrix is doing something weird 
+        // for multiple block inputs. Only tested for one block input.
+        w[i][t] = SIGMA_LOWER_1(w[i][t-2]) + w[i][t-7] + SIGMA_LOWER_0(w[i][t-15]) + w[i][t-16];
     }
 
     // 2. Initialize working variables
@@ -192,7 +201,7 @@ void computeSHA256(uint message[BLOCKS][16], UInteger result[8]) {
 
     // 3. Compress: update working variables
     for (int t=0; t < 64; t++) {
-      UInteger temp1 = h + SIGMA_UPPER_1(e) + CH(e, f, g) + k[t] + w[t];
+      UInteger temp1 = h + SIGMA_UPPER_1(e) + CH(e, f, g) + k[t] + w[i][t];
       UInteger temp2 = SIGMA_UPPER_0(a) + MAJ(a, b, c);
       h = g;
       g = f;
