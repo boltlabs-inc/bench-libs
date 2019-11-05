@@ -33,8 +33,8 @@ struct PrivKey {
  * \param wpk           : wallet public key (TYPISSUE - maybe not the same as as signing key?)
  * \param balance_cust  : customer balance (TYPISSUE - do we want to allow larger transactions?)
  * \param balance_merch : merchant balance
- * \param txid_merch    : transaction ID for merchant close transaction (bits, formatted as they appear in the 'source' field of a transaction that spends it)
- * \param txid_escrow   : transaction ID for escrow transaction (ditto on format)
+ * \param txid_merch    : transaction ID for merchant close transaction (bits, formatted as they appear in the 'source' field of a transaction that spends it) (TYPISSUE - this should have a fixed size)
+ * \param txid_escrow   : transaction ID for escrow transaction (ditto on format)(TYPISSUE - this should have a fixed size)
  */
 struct Wallet {
   PubKey pkC;
@@ -60,6 +60,8 @@ struct Commit {
  * runs MPC to compute masked tokens (close- and pay-).
  * blocks until computation is finished.
  *
+ * Pads close_tx_escrow and close_tx_merch to exactly 1024 bits according to the SHA256 spec.
+ *
  * option: port could be fixed in advance (not passed in here)
  * 
  * \param[in] pkM       : (shared) merchant public key
@@ -73,8 +75,8 @@ struct Commit {
  * \param[in] w_old     : (private) previous wallet object
  * \param[in] t_new     : (private) commitment randomness (TYPISSUE)
  * \param[in] pt_old    : (private) previous pay token (TYPISSUE - not an int)
- * \param[in] close_tx_escrow   : (private) bits of new close transaction (spends from escrow)
- * \param[in] close_tx_merch    : (private) bits of new close transaction (spends from merchant close transaction)
+ * \param[in] close_tx_escrow   : (private) bits of new close transaction (spends from escrow). no more than 1024 bits.
+ * \param[in] close_tx_merch    : (private) bits of new close transaction (spends from merchant close transaction). No more than 1024 bits.
  * 
  * \param[out] ct_masked    : masked close token (TYPISSUE - definitely a pointer, maybe not an int)
  * \param[out] pt_masked    : masked pay token (TYPISSUE - definitely a pointer, maybe not an int)
@@ -92,8 +94,8 @@ void build_masked_tokens_cust(
   Wallet w_old,
   int t,
   int pt_old, 
-  bool *close_tx_escrow,
-  bool *close_tx_merch,
+  bool close_tx_escrow[1024],
+  bool close_tx_merch[1024],
 
   int *ct_masked,
   int *pt_masked
