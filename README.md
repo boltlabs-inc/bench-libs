@@ -17,7 +17,7 @@ $ docker run -it --rm compare
 ```
 Run the benchmarking script.
 ```
-$ python benchmarking.py
+$ python benchmark.py
 ```
 
 You might have to edit the script to get the output you care about.
