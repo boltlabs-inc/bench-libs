@@ -22,10 +22,6 @@
 struct PubKey{
   int pubkey;
 };
-/* \param privkey    : a private key. TYPISSUE - probably not an integer */
-struct PrivKey {
-  int privkey;
-};
 
 /* wallet type
  *
@@ -45,13 +41,13 @@ struct Wallet {
   bool *txid_escrow;
 };
 
-/* Commitment type
- * \param params    : parameters for the commitment scheme (TYPISSUE - this will be a set of parameters including modulus q_com)
- * \param com       : commitment value (TYPISSUE - this is an int mod q_com, may be bigger than 32 bits)
+/* Partial ECDSA signature
+ * \param r     : A value for a partial ecdsa signature, k randomly chosen: (rx, ry) = kG, and r = rx*x mod q
+ * \param k_inv : For the randomly chosen k, k_inv = k^-1
  */
-struct Commit {
-  int params;
-  int com;
+struct EcdsaPartialSig {
+  bool *r;
+  bool *k_inv;
 };
 
 
@@ -66,7 +62,7 @@ struct Commit {
  * 
  * \param[in] pkM       : (shared) merchant public key
  * \param[in] amount    : (shared) transaction amount (TYPISSUE)
- * \param[in] com_new   : (shared) commitment to new wallet object
+ * \param[in] com_new   : (shared) commitment to new wallet object using a SHA256 commitment
  * \param[in] wpk_old   : (shared) previous wallet public key
  * \param[in] port      : (shared) communication port
  * \param[in] ip_addr   : (shared) merchant's IP address
@@ -84,16 +80,16 @@ struct Commit {
  */
 void build_masked_tokens_cust(
   PubKey pkM,
-  int amount,
-  Commit com_new,
+  bool *amount,
+  bool *com_new,
   PubKey wpk_old,
   int port,
   int ip_addr,
 
   Wallet w_new,
   Wallet w_old,
-  int t,
-  int pt_old, 
+  bool *t,
+  bool *pt_old,
   bool close_tx_escrow[1024],
   bool close_tx_merch[1024],
 
@@ -123,20 +119,24 @@ void build_masked_tokens_cust(
  * \param[in] port      : (shared) communication port
  * \param[in] ip_addr   : (shared) customer's IP address
  *
- * \param[in] skM       : (private) merchant ECDSA secret key
+ * \param[in] sig1      : (private) A partial ECDSA signature
+ * \param[in] sig2      : (private) A partial ECDSA signature
+ * \param[in] sig3      : (private) A partial ECDSA signature
  *
  * Merchant does not receive output.
  *
  */
 void build_masked_tokens_merch(
   PubKey pkM,
-  int amount,
-  Commit com_new,
+  bool *amount,
+  bool *com_new,
   PubKey wpk_old,
   int port,
   int ip_addr,
 
-  PrivKey skM
+  EcdsaPartialSig sig1,
+  EcdsaPartialSig sig2,
+  EcdsaPartialSig sig3
 );
 
 
