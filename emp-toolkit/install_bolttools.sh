@@ -1,3 +1,9 @@
+# put files in ther ight places
+cd ~
+mv  build_tokens/ emp-sh2pc/
+rm emp-sh2pc/test/*
+mv test/ emp-sh2pc/
+
 # apply patch to add complement operation for integers
 #cd ~/emp-tool
 #git apply ~/not_patch.diff
@@ -17,18 +23,14 @@ cmake .
 make uint # maybe need to do more to install it later
 make install
 
+# run our custom makefile
+# (builds bolt library, bolt protocol, unit tests
 cd ~/emp-sh2pc
+mv ../CMakeLists.txt .
 mkdir build
-
-for TEST in ecdsa sha256 # ripemd-160
-do
-  mv ~/$TEST.cpp test/
-  echo "add_test ($TEST)" >> CMakeLists.txt
-  cd build
-  cmake ..
-  make $TEST
-  cd ..
-done
+cd build
+cmake ..
+make all
 
 # apply patch to update test code for ag2pc (it's broken)
 cd ~/emp-ag2pc
