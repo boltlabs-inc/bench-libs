@@ -12,7 +12,9 @@ RUN apt-get update && apt-get install -y \
   wget
 ADD install.sh .
 RUN ["bash", "install.sh"]
+
 ADD source/ .
+
 ADD install_bolttools.sh .
 RUN ["bash", "install_bolttools.sh"]
 CMD ["/bin/bash"]

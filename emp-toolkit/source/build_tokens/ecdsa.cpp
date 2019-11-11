@@ -1,18 +1,7 @@
 #include <typeinfo>
-#include "emp-sh2pc/emp-sh2pc.h"
-using namespace emp;
+#include "ecdsa.h"
 using namespace std;
 
-#define MERCH ALICE
-#define CUST BOB
-
-const int QLEN = 256;
-
-struct ECDSA_sig {
-  Integer rx;
-  Integer ry;
-  Integer s;
-};
 
 // computes SHA256 hash of the input
 // todo; maybe require this in a different format 
@@ -35,7 +24,7 @@ void get_ECDSA_params(string *q) {
 // rx, ry : public key point on curve
 // sk : private key integer
 // ki : private key
-struct ECDSA_sig ecdsa_sign(int qc, int rxc, int ryc,
+struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
                      int skc, int kic,
                      int mc) {
 
@@ -84,20 +73,10 @@ struct ECDSA_sig ecdsa_sign(int qc, int rxc, int ryc,
 }
 
 
+// very bad fake test
 void test_signature() {
-  ECDSA_sig es = ecdsa_sign(10,1,1,1,1,1);
+  ECDSA_sig es = ecdsa_sign(1,1,1,1,1);
   cout << "signature is " << es.s.reveal<int>(PUBLIC) << endl;
 }
 
 
-int main(int argc, char** argv) {
-	int port, party;
-	parse_party_and_port(argv, &party, &port);
-	NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
-
-	setup_semi_honest(io, party);
-
-    test_signature();
-
-	delete io;
-}
