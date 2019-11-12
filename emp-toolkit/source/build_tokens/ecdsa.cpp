@@ -1,6 +1,5 @@
 #include <typeinfo>
 #include "ecdsa.h"
-using namespace std;
 
 
 // computes SHA256 hash of the input
@@ -24,7 +23,7 @@ void get_ECDSA_params(string *q) {
 // rx, ry : public key point on curve
 // sk : private key integer
 // ki : private key
-struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
+struct ECDSA_sig ecdsa_sign(//int rxc, int ryc,
                      int skc, int kic,
                      int mc) {
 
@@ -33,11 +32,9 @@ struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
   // (r_x, r_y) = k*G. merchant chooses k and shares these in the clear
   string qcs;
   get_ECDSA_params(&qcs);
-  cout << "new q:" << qcs << endl;
   Integer q(257, qcs, PUBLIC);
-  cout << "recycled: " << q.reveal<string>(PUBLIC) << endl;
-  Integer rx(QLEN, rxc, PUBLIC);
-  Integer ry(QLEN, ryc, PUBLIC);
+  // Integer rx(QLEN, rxc, PUBLIC);
+  // Integer ry(QLEN, ryc, PUBLIC);
 
   // merchant inputs
   // sk : r_x * x mod q
@@ -49,10 +46,10 @@ struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
   // m : message (limited to 1024 bits because that's all we can hash)
   Integer m(1024, mc, CUST);
 
-  // question: can we compute hash as a mod value or do we compute it as larger numbers
-  // and then mod later?
+  // hash input
   Integer e = signature_hash(m);
   e.resize(257, true);
+  e = e % q;
 
   // can we keep q in the clear and use it as the modulus?
   Integer s = e + sk;
@@ -66,8 +63,8 @@ struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
   s.resize(256,true);
 
   struct ECDSA_sig signature;
-  signature.rx = rx;
-  signature.ry = ry;
+  //signature.rx = rx;
+  //signature.ry = ry;
   signature.s = s;
   return signature;
 }
@@ -75,7 +72,7 @@ struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
 
 // very bad fake test
 void test_signature() {
-  ECDSA_sig es = ecdsa_sign(1,1,1,1,1);
+  ECDSA_sig es = ecdsa_sign(1,1,1);
   cout << "signature is " << es.s.reveal<int>(PUBLIC) << endl;
 }
 

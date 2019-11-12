@@ -1,9 +1,47 @@
 #include <typeinfo>
 #include "ecdsa.h"
 #include "sha256.h"
+#include "tokens.h"
 
 using namespace std;
 
+// old main functions -- don't use
+int sha256_main(int argc, char** argv);
+int ecdsa_main(int argc, char** argv);
+
+/* 
+ * Test main for token generation
+ * generates fake data for now.
+ */
+int main(int argc, char** argv) {
+
+  assert (argc == 2);
+  int party = atoi(argv[1]);
+  int port = 12345;
+
+  if (party == MERCH) {
+	PubKey pkM;
+	EcdsaPartialSig sig;
+	build_masked_tokens_merch(
+	  pkM, nullptr, nullptr, pkM, port, "127.0.0.1",
+	  1, 1, sig, sig, sig);
+  } else {
+	PubKey pkM;
+	Wallet w;
+	bool tx[1024] = {0};
+	int res;
+
+	build_masked_tokens_cust(
+	  pkM, nullptr, nullptr, pkM, port, "127.0.0.1",
+	  w, w, nullptr, nullptr, tx, tx, 
+	  &res, &res);
+  }
+
+  return 0;
+}
+
+/* old main functions (e.g. how to call ecdsa and sha functions) 
+ */
 int ecdsa_main(int argc, char** argv) {
     int port, party;
     parse_party_and_port(argv, &party, &port);
@@ -67,7 +105,3 @@ int sha256_main(int argc, char** argv) {
   return 0;
 }
 
-int main(int argc, char** argv) {
-  //return ecdsa_main(argc, argv);
-  return sha256_main(argc, argv);
-}

@@ -1,4 +1,6 @@
+#pragma once
 #include "emp-sh2pc/emp-sh2pc.h"
+
 using namespace emp;
 using namespace std;
 
@@ -29,8 +31,7 @@ void get_ECDSA_params(string *q);
 // rx, ry : public key point on curve
 // sk : private key integer
 // ki : private key
-struct ECDSA_sig ecdsa_sign(int rxc, int ryc,
-                     int skc, int kic,
+struct ECDSA_sig ecdsa_sign(int skc, int kic,
                      int mc);
 
 

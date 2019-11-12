@@ -1,3 +1,8 @@
+#pragma once 
+
+#include <string>
+using namespace std;
+
 /*
  * describes an API for calling MPC functions 
  * 
@@ -84,7 +89,7 @@ void build_masked_tokens_cust(
   bool *com_new,
   PubKey wpk_old,
   int port,
-  int ip_addr,
+  string ip_addr,
 
   Wallet w_new,
   Wallet w_old,
@@ -119,6 +124,8 @@ void build_masked_tokens_cust(
  * \param[in] port      : (shared) communication port
  * \param[in] ip_addr   : (shared) customer's IP address
  *
+ * \param[in] close_mask: (private) A random mask for the close token
+ * \param[in] pay_mask  : (private) A random mask for the pay token
  * \param[in] sig1      : (private) A partial ECDSA signature
  * \param[in] sig2      : (private) A partial ECDSA signature
  * \param[in] sig3      : (private) A partial ECDSA signature
@@ -132,14 +139,13 @@ void build_masked_tokens_merch(
   bool *com_new,
   PubKey wpk_old,
   int port,
-  int ip_addr,
+  string ip_addr,
 
+  int close_mask,
+  int pay_mask,
   EcdsaPartialSig sig1,
   EcdsaPartialSig sig2,
   EcdsaPartialSig sig3
 );
-
-
-
 
 
