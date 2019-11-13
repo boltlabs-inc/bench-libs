@@ -29,7 +29,7 @@ struct PubKey{
 };
 
 /* Revocation lock - TYPISSUE: not sure what type this is yet.
- * Tentatively sized to use a hash commitment scheme.
+ * Tentatively sized to use a hash (SHA256-based) commitment scheme.
  * \param rl 	: a revocation lock.
  */
 struct RevLock {
@@ -40,18 +40,18 @@ struct RevLock {
  *
  * \param pkC           : customer public key 
  * \param rl 			: revocation lock for 
- * \param balance_cust  : customer balance (TYPISSUE - do we want to allow larger transactions?)
+ * \param balance_cust  : customer balance 
  * \param balance_merch : merchant balance
- * \param txid_merch    : transaction ID for merchant close transaction (bits, formatted as they appear in the 'source' field of a transaction that spends it) (TYPISSUE - this should have a fixed size)
- * \param txid_escrow   : transaction ID for escrow transaction (ditto on format)(TYPISSUE - this should have a fixed size)
+ * \param txid_merch    : transaction ID for merchant close transaction (bits, formatted as they appear in the 'source' field of a transaction that spends it) 
+ * \param txid_escrow   : transaction ID for escrow transaction (ditto on format)
  */
 struct State {
   PubKey pkC;
   RevLock rl;
   int balance_cust;
   int balance_merch;
-  bool *txid_merch;
-  bool *txid_escrow;
+  bool txid_merch[256];
+  bool txid_escrow[256];
 };
 
 /* Partial ECDSA signature
@@ -59,8 +59,8 @@ struct State {
  * \param k_inv : For the randomly chosen k, k_inv = k^-1
  */
 struct EcdsaPartialSig {
-  bool *r;
-  bool *k_inv;
+  bool r[256];
+  bool k_inv[256];
 };
 
 
@@ -74,7 +74,7 @@ struct EcdsaPartialSig {
  * option: port could be fixed in advance (not passed in here)
  * 
  * \param[in] pkM       : (shared) merchant public key
- * \param[in] amount    : (shared) transaction amount (TYPISSUE)
+ * \param[in] amount    : (shared) transaction amount 
  * \param[in] com_new   : (shared) commitment to new state object using a SHA256 commitment
  * \param[in] rl_old   	: (shared) previous state revocation lock 
  * \param[in] port      : (shared) communication port
@@ -83,17 +83,17 @@ struct EcdsaPartialSig {
  * \param[in] w_new     : (private) new state object
  * \param[in] w_old     : (private) previous state object
  * \param[in] t_new     : (private) commitment randomness (TYPISSUE - size?)
- * \param[in] pt_old    : (private) previous pay token (TYPISSUE - size?)
+ * \param[in] pt_old    : (private) previous pay token (tentative: ECDSA signature)
  * \param[in] close_tx_escrow   : (private) bits of new close transaction (spends from escrow). no more than 1024 bits.
  * \param[in] close_tx_merch    : (private) bits of new close transaction (spends from merchant close transaction). No more than 1024 bits.
  * 
- * \param[out] ct_masked    : masked close token (TYPISSUE - size? representation (serialized something)?)
- * \param[out] pt_masked    : masked pay token (TYPISSUE - size? representation (serialized)?)
+ * \param[out] ct_masked    : masked close token (ECDSA signature) (TYPISSUE - representation (serialized)?)
+ * \param[out] pt_masked    : masked pay token (tentative: ECDSA signature) (TYPISSUE - representation (serialized)?)
  *
  */
 void build_masked_tokens_cust(
   PubKey pkM,
-  bool *amount,
+  bool amount[64],
   bool *com_new,
   RevLock rl_old,
   int port,
@@ -102,12 +102,12 @@ void build_masked_tokens_cust(
   State w_new,
   State w_old,
   bool *t,
-  bool *pt_old,
+  bool pt_old[256],
   bool close_tx_escrow[1024],
   bool close_tx_merch[1024],
 
-  int *ct_masked,
-  int *pt_masked
+  bool ct_masked[256],
+  bool pt_masked[256]
 );
 
 
@@ -126,14 +126,14 @@ void build_masked_tokens_cust(
  * option: port could be fixed in advance (not passed in here)
  *
  * \param[in] pkM       : (shared) merchant public key
- * \param[in] amount    : (shared) transaction amount (TYPISSUE)
+ * \param[in] amount    : (shared) transaction amount 
  * \param[in] com_new   : (shared) commitment to new state object
  * \param[in] rl_old 	: (shared) previous state revocation lock
  * \param[in] port      : (shared) communication port
  * \param[in] ip_addr   : (shared) customer's IP address
  *
- * \param[in] close_mask: (private) A random mask for the close token (TYPISSUE: size?)
- * \param[in] pay_mask  : (private) A random mask for the pay token (TYPISSUE: size?)
+ * \param[in] close_mask: (private) A random mask for the close token 
+ * \param[in] pay_mask  : (private) A random mask for the pay token 
  * \param[in] sig1      : (private) A partial ECDSA signature
  * \param[in] sig2      : (private) A partial ECDSA signature
  * \param[in] sig3      : (private) A partial ECDSA signature
@@ -143,14 +143,14 @@ void build_masked_tokens_cust(
  */
 void build_masked_tokens_merch(
   PubKey pkM,
-  bool *amount,
+  bool amount[64],
   bool *com_new,
   RevLock rl_old,
   int port,
   string ip_addr,
 
-  bool *close_mask,
-  bool *pay_mask,
+  bool close_mask[256],
+  bool pay_mask[256],
   EcdsaPartialSig sig1,
   EcdsaPartialSig sig2,
   EcdsaPartialSig sig3

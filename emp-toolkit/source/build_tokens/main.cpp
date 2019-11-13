@@ -31,13 +31,13 @@ int main(int argc, char** argv) {
 	PubKey pkM;
 	RevLock rl;
 	State w;
-	bool tx[1024] = {0};
-	int res;
+	bool tx[1024] = { 0 };
+	bool res[256] = { 0 };
 
 	build_masked_tokens_cust(
 	  pkM, nullptr, nullptr, rl, port, "127.0.0.1",
 	  w, w, nullptr, nullptr, tx, tx, 
-	  &res, &res);
+	  res, res);
   }
 
   return 0;

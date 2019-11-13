@@ -51,7 +51,7 @@ void issue_tokens() {
  */
 void build_masked_tokens_cust(
   PubKey pkM,
-  bool *amount,
+  bool amount[64],
   bool *com_new,
   RevLock rl_old,
   int port,
@@ -60,12 +60,12 @@ void build_masked_tokens_cust(
   State w_new,
   State w_old,
   bool *t,
-  bool *pt_old,
+  bool pt_old[256],
   bool close_tx_escrow[1024],
   bool close_tx_merch[1024],
 
-  int *ct_masked,
-  int *pt_masked
+  bool ct_masked[256],
+  bool pt_masked[256]
 ) {
   
   // todo: replace new/delete with sweet auto
@@ -79,14 +79,14 @@ void build_masked_tokens_cust(
 
 void build_masked_tokens_merch(
   PubKey pkM,
-  bool *amount,
+  bool amount[64],
   bool *com_new,
   RevLock rl_old,
   int port,
   string ip_addr,
 
-  bool *close_mask,
-  bool *pay_mask,
+  bool close_mask[256],
+  bool pay_mask[256],
   EcdsaPartialSig sig1,
   EcdsaPartialSig sig2,
   EcdsaPartialSig sig3
