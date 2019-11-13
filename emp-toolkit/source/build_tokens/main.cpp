@@ -21,18 +21,21 @@ int main(int argc, char** argv) {
 
   if (party == MERCH) {
 	PubKey pkM;
+	RevLock rl;
 	EcdsaPartialSig sig;
+	bool mask[256];
 	build_masked_tokens_merch(
-	  pkM, nullptr, nullptr, pkM, port, "127.0.0.1",
-	  1, 1, sig, sig, sig);
+	  pkM, nullptr, nullptr, rl, port, "127.0.0.1",
+	  mask, mask, sig, sig, sig);
   } else {
 	PubKey pkM;
-	Wallet w;
+	RevLock rl;
+	State w;
 	bool tx[1024] = {0};
 	int res;
 
 	build_masked_tokens_cust(
-	  pkM, nullptr, nullptr, pkM, port, "127.0.0.1",
+	  pkM, nullptr, nullptr, rl, port, "127.0.0.1",
 	  w, w, nullptr, nullptr, tx, tx, 
 	  &res, &res);
   }

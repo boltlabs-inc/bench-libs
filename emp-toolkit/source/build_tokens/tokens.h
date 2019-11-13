@@ -22,24 +22,32 @@ using namespace std;
  * Comments are sort of in doxygen style.
  */
 
-/* ECDSA public and private key pair types */
-/* \param pubkey    : a public key. TYPISSUE - probably not an integer */
+/* ECDSA public key type 
+ * \param pubkey    : a public key. TYPISSUE - probably not an integer */
 struct PubKey{
   int pubkey;
 };
 
-/* wallet type
+/* Revocation lock - TYPISSUE: not sure what type this is yet.
+ * Tentatively sized to use a hash commitment scheme.
+ * \param rl 	: a revocation lock.
+ */
+struct RevLock {
+  bool revlock[256];
+};
+
+/* state type
  *
  * \param pkC           : customer public key 
- * \param wpk           : wallet public key (TYPISSUE - maybe not the same as as signing key?)
+ * \param rl 			: revocation lock for 
  * \param balance_cust  : customer balance (TYPISSUE - do we want to allow larger transactions?)
  * \param balance_merch : merchant balance
  * \param txid_merch    : transaction ID for merchant close transaction (bits, formatted as they appear in the 'source' field of a transaction that spends it) (TYPISSUE - this should have a fixed size)
  * \param txid_escrow   : transaction ID for escrow transaction (ditto on format)(TYPISSUE - this should have a fixed size)
  */
-struct Wallet {
+struct State {
   PubKey pkC;
-  PubKey wpk;
+  RevLock rl;
   int balance_cust;
   int balance_merch;
   bool *txid_merch;
@@ -67,32 +75,32 @@ struct EcdsaPartialSig {
  * 
  * \param[in] pkM       : (shared) merchant public key
  * \param[in] amount    : (shared) transaction amount (TYPISSUE)
- * \param[in] com_new   : (shared) commitment to new wallet object using a SHA256 commitment
- * \param[in] wpk_old   : (shared) previous wallet public key
+ * \param[in] com_new   : (shared) commitment to new state object using a SHA256 commitment
+ * \param[in] rl_old   	: (shared) previous state revocation lock 
  * \param[in] port      : (shared) communication port
  * \param[in] ip_addr   : (shared) merchant's IP address
  *
- * \param[in] w_new     : (private) new wallet object
- * \param[in] w_old     : (private) previous wallet object
- * \param[in] t_new     : (private) commitment randomness (TYPISSUE)
- * \param[in] pt_old    : (private) previous pay token (TYPISSUE - not an int)
+ * \param[in] w_new     : (private) new state object
+ * \param[in] w_old     : (private) previous state object
+ * \param[in] t_new     : (private) commitment randomness (TYPISSUE - size?)
+ * \param[in] pt_old    : (private) previous pay token (TYPISSUE - size?)
  * \param[in] close_tx_escrow   : (private) bits of new close transaction (spends from escrow). no more than 1024 bits.
  * \param[in] close_tx_merch    : (private) bits of new close transaction (spends from merchant close transaction). No more than 1024 bits.
  * 
- * \param[out] ct_masked    : masked close token (TYPISSUE - definitely a pointer, maybe not an int)
- * \param[out] pt_masked    : masked pay token (TYPISSUE - definitely a pointer, maybe not an int)
+ * \param[out] ct_masked    : masked close token (TYPISSUE - size? representation (serialized something)?)
+ * \param[out] pt_masked    : masked pay token (TYPISSUE - size? representation (serialized)?)
  *
  */
 void build_masked_tokens_cust(
   PubKey pkM,
   bool *amount,
   bool *com_new,
-  PubKey wpk_old,
+  RevLock rl_old,
   int port,
   string ip_addr,
 
-  Wallet w_new,
-  Wallet w_old,
+  State w_new,
+  State w_old,
   bool *t,
   bool *pt_old,
   bool close_tx_escrow[1024],
@@ -119,13 +127,13 @@ void build_masked_tokens_cust(
  *
  * \param[in] pkM       : (shared) merchant public key
  * \param[in] amount    : (shared) transaction amount (TYPISSUE)
- * \param[in] com_new   : (shared) commitment to new wallet object
- * \param[in] wpk_old   : (shared) previous wallet public key
+ * \param[in] com_new   : (shared) commitment to new state object
+ * \param[in] rl_old 	: (shared) previous state revocation lock
  * \param[in] port      : (shared) communication port
  * \param[in] ip_addr   : (shared) customer's IP address
  *
- * \param[in] close_mask: (private) A random mask for the close token
- * \param[in] pay_mask  : (private) A random mask for the pay token
+ * \param[in] close_mask: (private) A random mask for the close token (TYPISSUE: size?)
+ * \param[in] pay_mask  : (private) A random mask for the pay token (TYPISSUE: size?)
  * \param[in] sig1      : (private) A partial ECDSA signature
  * \param[in] sig2      : (private) A partial ECDSA signature
  * \param[in] sig3      : (private) A partial ECDSA signature
@@ -137,12 +145,12 @@ void build_masked_tokens_merch(
   PubKey pkM,
   bool *amount,
   bool *com_new,
-  PubKey wpk_old,
+  RevLock rl_old,
   int port,
   string ip_addr,
 
-  int close_mask,
-  int pay_mask,
+  bool *close_mask,
+  bool *pay_mask,
   EcdsaPartialSig sig1,
   EcdsaPartialSig sig2,
   EcdsaPartialSig sig3
