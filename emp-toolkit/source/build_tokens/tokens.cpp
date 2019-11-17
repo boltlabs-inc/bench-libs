@@ -9,7 +9,11 @@
 using namespace emp;
 
 // TODO: add fail bit and count up all the validations
-void issue_tokens() {
+void issue_tokens(EcdsaPartialSig sig1, 
+  bool close_tx_escrow[1024],
+  EcdsaPartialSig sig2, 
+  bool close_tx_merch[1024]
+  ) {
   // check old pay token
   verify_token_sig();
 
@@ -23,12 +27,8 @@ void issue_tokens() {
   validate_transactions();
 
   // sign new close transactions 
-  // TODO: update ecdsa signature API to take secret params
-  int skc = 0;
-  int kic = 0;
-  int mc  = 0;
-  struct ECDSA_sig signed_merch_tx = ecdsa_sign(skc, kic, mc);
-  struct ECDSA_sig signed_escrow_tx = ecdsa_sign(skc, kic, mc);
+  struct ECDSA_sig signed_merch_tx = ecdsa_sign(close_tx_escrow, sig1);
+  struct ECDSA_sig signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
 
   // sign new pay token
   sign_token();
@@ -72,7 +72,11 @@ void build_masked_tokens_cust(
   NetIO * io = new NetIO("127.0.0.1", port);
   setup_semi_honest(io, CUST);
 
-  issue_tokens();
+  EcdsaPartialSig dummy_sig;
+
+  close_tx_escrow[1022] = true;
+
+  issue_tokens(dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
 
   delete io;
 }
@@ -96,9 +100,61 @@ void build_masked_tokens_merch(
   NetIO * io = new NetIO(nullptr, port);
   setup_semi_honest(io, MERCH);
 
-  issue_tokens();
+  // hardcod test values
+  for (int i=0; i < 256; i++) {
+    sig1.r[i] = false;
+    sig1.k_inv[i] = false;
+
+    sig2.r[i] = false;
+    sig2.k_inv[i] = false;
+  }
+  sig1.r[255] = true;
+  sig1.r[252] = true;
+  sig1.r[251] = true;
+
+  sig1.k_inv[255] = true;
+
+  sig2.r[245] = true;
+  sig2.k_inv[255] = true; 
+
+  // define dummy (customer) inputs
+  bool dummy_tx[1024];
+
+  issue_tokens(sig1, dummy_tx, sig2, dummy_tx);
 
   delete io;
+}
+
+
+Integer makeInteger(bool *bits, int len, int intlen, int party) {
+  string bitstr = "";
+  for( int i=0; i < len; i++) {
+    bitstr += bits[i] ? "1" : "0";
+  }
+  bitstr = change_base(bitstr,2,10);
+  return Integer(intlen, bitstr, party);
+}
+
+PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub) { 
+  PrivateEcdsaPartialSig priv;
+  // probably should abstract this int initialization away
+  priv.r = makeInteger(pub.r, 256, 257, MERCH);
+  priv.k_inv = makeInteger(pub.k_inv, 256, 513, MERCH);
+  return priv;
+
+  string r_bitstr = "";
+  string k_bitstr = "";
+  for (int i=0; i < 256; i++) {
+    r_bitstr += pub.r[i] ? "1" : "0";
+    k_bitstr += pub.k_inv[i] ? "1" : "0";
+  }
+  r_bitstr = change_base(r_bitstr,2,10); // assume r is positive, not in 2's complement notation
+  priv.r = Integer(257, r_bitstr, MERCH);
+
+  k_bitstr = change_base(k_bitstr,2,10); // assume k is positive, not in 2's complement notation
+  priv.k_inv = Integer(513, k_bitstr, MERCH);
+
+  return priv;
 }
 
 void sign_token() {

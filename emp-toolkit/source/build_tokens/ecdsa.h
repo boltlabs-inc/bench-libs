@@ -1,5 +1,8 @@
 #pragma once
 #include "emp-sh2pc/emp-sh2pc.h"
+#include "tokens.h"
+#include "tokens-misc.h"
+
 
 using namespace emp;
 using namespace std;
@@ -10,8 +13,6 @@ using namespace std;
 const int QLEN = 256;
 
 struct ECDSA_sig {
-  Integer rx;
-  Integer ry;
   Integer s;
 };
 
@@ -31,8 +32,7 @@ void get_ECDSA_params(string *q);
 // rx, ry : public key point on curve
 // sk : private key integer
 // ki : private key
-struct ECDSA_sig ecdsa_sign(int skc, int kic,
-                     int mc);
+struct ECDSA_sig ecdsa_sign(bool msg[1024], EcdsaPartialSig s);
 
 
 // small test function; expected result 2

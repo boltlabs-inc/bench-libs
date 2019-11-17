@@ -2,13 +2,33 @@
 #include "emp-sh2pc/emp-sh2pc.h"
 using namespace emp;
 
+#define MERCH ALICE
+#define CUST BOB
+
+/* Private partial ECDSA signature
+ * \param r     : A value for a partial ecdsa signature, k randomly chosen: (rx, ry) = kG, and r = rx*x mod q
+ * \param k_inv : For the randomly chosen k, k_inv = k^-1
+ */
+struct PrivateEcdsaPartialSig {
+  Integer r;
+  Integer k_inv;
+};
+
+PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub ); 
+
+Integer makeInteger(bool *bits, int len, int intlen, int party);
+
 /* TODO: Fix types for all of these */
 
 /* issue tokens
  * parent function; implements Protocol Pi_{ IssueTokens }
  * as described in bolt.pdf
  */
-void issue_tokens();
+void issue_tokens(EcdsaPartialSig sig1, 
+  bool close_tx_escrow[1024],
+  EcdsaPartialSig sig2, 
+  bool close_tx_merch[1024]
+  );
 
 /* SIGNATURE SCHEME
  * for the pay token. We haven't decided which one to use.
