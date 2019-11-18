@@ -58,6 +58,7 @@ int ecdsa_main(int argc, char** argv) {
     return 0;
 }
 
+/*
 int sha256_main(int argc, char** argv) {
   // generate circuit for use in malicious library
   // this breaks and I don't know why --Marcella
@@ -107,4 +108,4 @@ int sha256_main(int argc, char** argv) {
   delete io;
   return 0;
 }
-
+*/

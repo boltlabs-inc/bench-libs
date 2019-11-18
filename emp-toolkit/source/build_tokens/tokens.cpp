@@ -28,7 +28,7 @@ void issue_tokens(EcdsaPartialSig sig1,
 
   // sign new close transactions 
   struct ECDSA_sig signed_merch_tx = ecdsa_sign(close_tx_escrow, sig1);
-  struct ECDSA_sig signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
+  //struct ECDSA_sig signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
 
   // sign new pay token
   sign_token();
@@ -74,7 +74,9 @@ void build_masked_tokens_cust(
 
   EcdsaPartialSig dummy_sig;
 
-  close_tx_escrow[1022] = true;
+  for (int i=0; i < 10; i+=2) {
+    close_tx_escrow[1023-i] = true;
+  }
 
   issue_tokens(dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
 

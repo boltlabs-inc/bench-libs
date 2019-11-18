@@ -23,8 +23,8 @@ const int BLOCKS = 1;
 #define SIGMA_LOWER_0(x) (ROR32(x, 7) ^ ROR32(x, 18) ^ SHR32(x, 3))
 #define SIGMA_LOWER_1(x) (ROR32(x, 17) ^ ROR32(x, 19) ^ SHR32(x, 10))
 
-Integer ROR32(Integer x, Integer n);
-Integer ROR32(Integer x, uint n);
+UInteger ROR32(UInteger x, UInteger n);
+UInteger ROR32(UInteger x, uint n);
 uint ROR32(uint x, uint n);
 
 /* FIPS PUB 180-4 -- 4.2.2
@@ -56,15 +56,14 @@ static const uint32_t IV_clear[8] = {
 };
 
 
-void initSHA256(Integer k[64], Integer H[8]); 
-string get_bitstring(Integer x);
+void initSHA256(UInteger k[64], UInteger H[8]); 
+string get_bitstring(UInteger x);
 
 
 /* computes sha256 for a 2-block message
  * output is stored in result
- * composed of 8 32-bit Integers such that
+ * composed of 8 32-bit UIntegers such that
  * sha256(message) = result[0] || result[1] || ... || result[7]
  */
-void computeSHA256(uint message[BLOCKS][16], Integer result[8]);
-
+void computeSHA256(uint message[BLOCKS][16], UInteger result[8]);
 

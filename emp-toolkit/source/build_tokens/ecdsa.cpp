@@ -1,11 +1,66 @@
 #include <typeinfo>
 #include "ecdsa.h"
+#include "sha256.h"
 
 // computes SHA256 hash of the input
-// todo; maybe require this in a different format 
-// (e.g. padded and in blocks)
-Integer signature_hash(Integer m) {
-  return m;
+// first, converts bit-array to uint blocks as required by sha256
+// (big-endian bit shifts; maybe they're in the wrong order?
+//  TODO make some test vectors, seriously)
+//
+Integer signature_hash(bool msg[1024]) {
+  uint message[2][16] = {0};
+  uint shft = 0;
+  uint block = 0;
+  uint byte = 0;
+  uint build = 0;
+  for (int i=1023; i>0; i--) {
+    build |= msg[i] << shft;
+
+    shft++;
+    if (shft == 32) {
+      message[block][byte] = build;
+      byte++;
+      build = 0;
+      shft = 0;
+    }
+    if (byte == 16) {
+      cout << "built message block " << block << endl;
+      block++;
+      byte = 0;
+    }
+  }
+  cout << "finished building message" << endl;
+  
+  //UInteger result[8];
+  Integer result[8];
+  computeSHA256(message, result);
+  
+  cout << "successful hash of message" << endl;
+
+  for (int j=0; j < 8; j++) {
+    cout << "\t" << get_bitstring(result[j]) << endl;
+  }
+  //Integer intlen(256,32,PUBLIC);
+  //Integer squash(256, 0, PUBLIC);
+  //squash = squash | result[0];
+  //cout << "one chunk: " << change_base(get_bitstring(squash),2,16) << endl;
+  //squash = (squash << intlen) | result[1];
+  cout << "resized result" << endl;
+
+
+  string res = "";
+  for (int r=0; r<7; r++){
+    res += get_bitstring(result[r]);
+  }
+
+  res = change_base(res, 2, 16);
+  cout <<"ecdsa hash: " << res << endl;
+
+  // TODO: figure out correct output format!!
+
+  //return message;
+  Integer a(256, "123", PUBLIC);
+  return a;
 }
 
 // hard-coded conversion of secp256k1 point order 
@@ -33,10 +88,12 @@ struct ECDSA_sig ecdsa_sign(bool msg[1024], EcdsaPartialSig pubsig) {
 
   // customer inputs
   // m : message (limited to 1024 bits because that's all we can hash)
-  Integer m = makeInteger(msg, 1024, 1024, CUST);
+  //UInteger m = makeUInteger(msg, 1024, 1024, CUST);
 
   // hash input
-  Integer e = signature_hash(m);
+  cout << "about to hash" << endl;
+  Integer e = signature_hash(msg);
+  cout << "finished hash" << endl;
   e.resize(257, true);
   e = e % q;
 
@@ -57,7 +114,6 @@ struct ECDSA_sig ecdsa_sign(bool msg[1024], EcdsaPartialSig pubsig) {
   cout << "signature is " << signature.s.reveal<string>(PUBLIC) << endl;
   return signature;
 }
-
 
 // very bad fake test
 void test_signature() {

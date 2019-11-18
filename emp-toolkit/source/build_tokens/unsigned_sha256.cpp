@@ -11,12 +11,12 @@ using namespace std;
  */
 
 
-Integer ROR32(Integer x, Integer n) {
-  Integer thirtytwo(BITS, 32, PUBLIC);
+UInteger ROR32(UInteger x, UInteger n) {
+  UInteger thirtytwo(BITS, 32, PUBLIC);
   return (x >> n) | (x << (thirtytwo - n));
 }
-Integer ROR32(Integer x, uint n) {
-  Integer shiftamt(BITS, 32 - n, PUBLIC);
+UInteger ROR32(UInteger x, uint n) {
+  UInteger shiftamt(BITS, 32 - n, PUBLIC);
   return (x >> n) | (x << shiftamt);
 }
 uint ROR32(uint x, uint n) {
@@ -24,16 +24,16 @@ uint ROR32(uint x, uint n) {
 }
 
 
-void initSHA256(Integer k[64], Integer H[8]) {
+void initSHA256(UInteger k[64], UInteger H[8]) {
   for(int i=0; i<64; i++) {
-    k[i] = Integer(BITS, k_clear[i], PUBLIC);
+    k[i] = UInteger(BITS, k_clear[i], PUBLIC);
   }
   for(int i=0; i<8; i++) {
-    H[i] = Integer(BITS, IV_clear[i], PUBLIC);
+    H[i] = UInteger(BITS, IV_clear[i], PUBLIC);
   }
 }
 
-string get_bitstring(Integer x) {
+string get_bitstring(UInteger x) {
   string s = "";
   for(int i=0; i<x.size(); i++) {
     s = (x[i].reveal<bool>(PUBLIC) ? "1" : "0") + s;
@@ -43,26 +43,25 @@ string get_bitstring(Integer x) {
 
 /* computes sha256 for a 2-block message
  * output is stored in result
- * composed of 8 32-bit Integers such that
+ * composed of 8 32-bit UIntegers such that
  * sha256(message) = result[0] || result[1] || ... || result[7]
  */
-void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
+void computeSHA256(uint message[BLOCKS][16], UInteger result[8]) {
 
   // initialize constants and initial hash digest value
-  Integer k[64];
-  Integer H[8];
-  Integer a,b,c,d,e,f,g,h;
-  Integer w[BLOCKS][64];
+  UInteger k[64];
+  UInteger H[8];
+  UInteger a,b,c,d,e,f,g,h;
+  UInteger w[BLOCKS][64];
   // initialize message schedule
   for (int i=0; i<BLOCKS; i++) {
     for(size_t t=0; t<16; t++) {
       // todo: figure out who the message belongs to
-      w[i][t] = Integer(BITS, message[i][t], PUBLIC);
+      w[i][t] = UInteger(BITS, message[i][t], PUBLIC);
     }
   }
 
   initSHA256(k, H);
-  cout << "initialized sha256" << endl;
 
   for (int i=0; i<BLOCKS; i++) {
 
@@ -79,7 +78,6 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
         // for multiple block inputs. Only tested for one block input.
         w[i][t] = SIGMA_LOWER_1(w[i][t-2]) + w[i][t-7] + SIGMA_LOWER_0(w[i][t-15]) + w[i][t-16];
     }
-    cout << "mssage schedule set" << endl;
 
     // 2. Initialize working variables
     a = H[0];
@@ -93,8 +91,8 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
 
     // 3. Compress: update working variables
     for (int t=0; t < 64; t++) {
-      Integer temp1 = h + SIGMA_UPPER_1(e) + CH(e, f, g) + k[t] + w[i][t];
-      Integer temp2 = SIGMA_UPPER_0(a) + MAJ(a, b, c);
+      UInteger temp1 = h + SIGMA_UPPER_1(e) + CH(e, f, g) + k[t] + w[i][t];
+      UInteger temp2 = SIGMA_UPPER_0(a) + MAJ(a, b, c);
       h = g;
       g = f;
       f = e;
@@ -104,7 +102,6 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
       b = a;
       a = temp1 + temp2;
     }
-     cout << "updated vars" << endl;
 
     // 4. Set new hash values
     H[0] = H[0] + a;
@@ -117,11 +114,8 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
     H[7] = H[7] + h;
   }
 
-  cout << "done!" << endl;
-
   for(int i=0; i<7; i++) {
     result[i] = H[i];
   }
 }
-
 
