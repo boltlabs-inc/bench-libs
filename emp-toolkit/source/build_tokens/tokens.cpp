@@ -20,6 +20,7 @@ void issue_tokens(EcdsaPartialSig sig1,
   // make sure wallets are well-formed
   compare_wallets();
   
+  // todo: remove this
   // make sure customer committed to this new wallet
   open_commitment();
 

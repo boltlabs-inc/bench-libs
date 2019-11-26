@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
   libssl-dev \
   sudo \
   software-properties-common \
+  unzip \
   vim \
   wget
 ADD install.sh .
@@ -17,5 +18,9 @@ ADD source/ .
 
 ADD install_bolttools.sh .
 RUN ["bash", "install_bolttools.sh"]
+
+ADD install_testtools.sh
+RUN ["bash", "install_testtools.sh"]
+
 CMD ["/bin/bash"]
 

@@ -41,6 +41,17 @@ string get_bitstring(Integer x) {
   return s;
 }
 
+// result is 8 32-bit integers
+// hash   is 1 256-bit integer
+// hash = result[0] || result[1] || ... || result[7]
+void composeSHA256result(Integer result[8], Integer hash) {
+  for(int i=0; i<8; i++) {
+    cout << result[i].reveal<int>(PUBLIC) << endl;
+    //TODO fill this in
+  }
+
+}
+
 /* computes sha256 for a 2-block message
  * output is stored in result
  * composed of 8 32-bit Integers such that
@@ -62,7 +73,6 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
   }
 
   initSHA256(k, H);
-  cout << "initialized sha256" << endl;
 
   for (int i=0; i<BLOCKS; i++) {
 
@@ -79,7 +89,6 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
         // for multiple block inputs. Only tested for one block input.
         w[i][t] = SIGMA_LOWER_1(w[i][t-2]) + w[i][t-7] + SIGMA_LOWER_0(w[i][t-15]) + w[i][t-16];
     }
-    cout << "mssage schedule set" << endl;
 
     // 2. Initialize working variables
     a = H[0];
@@ -104,7 +113,6 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
       b = a;
       a = temp1 + temp2;
     }
-     cout << "updated vars" << endl;
 
     // 4. Set new hash values
     H[0] = H[0] + a;
@@ -117,9 +125,7 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
     H[7] = H[7] + h;
   }
 
-  cout << "done!" << endl;
-
-  for(int i=0; i<7; i++) {
+  for(int i=0; i<8; i++) {
     result[i] = H[i];
   }
 }

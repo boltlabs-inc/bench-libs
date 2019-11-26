@@ -31,21 +31,27 @@ Integer signature_hash(bool msg[1024]) {
   }
   cout << "finished building message" << endl;
   
-  //UInteger result[8];
   Integer result[8];
   computeSHA256(message, result);
+
+  Integer hash(256, 0, PUBLIC);
+  composeSHA256result(result, hash);
   
   cout << "successful hash of message" << endl;
+  cout << "\t" << hash.reveal<int>(PUBLIC) << endl;
 
+  /*
   for (int j=0; j < 8; j++) {
     cout << "\t" << get_bitstring(result[j]) << endl;
   }
+  */
+
   //Integer intlen(256,32,PUBLIC);
   //Integer squash(256, 0, PUBLIC);
   //squash = squash | result[0];
   //cout << "one chunk: " << change_base(get_bitstring(squash),2,16) << endl;
   //squash = (squash << intlen) | result[1];
-  cout << "resized result" << endl;
+  //cout << "resized result" << endl;
 
 
   string res = "";

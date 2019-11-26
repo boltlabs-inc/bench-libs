@@ -58,6 +58,7 @@ static const uint32_t IV_clear[8] = {
 
 void initSHA256(Integer k[64], Integer H[8]); 
 string get_bitstring(Integer x);
+void composeSHA256result(Integer result[8], Integer hash);
 
 
 /* computes sha256 for a 2-block message

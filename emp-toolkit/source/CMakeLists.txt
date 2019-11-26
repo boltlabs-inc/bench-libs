@@ -37,6 +37,7 @@ macro (add_test _name)
 endmacro()
 
 add_test (sha256)
+target_link_libraries(sha256 libcryptopp.a)
 #add_test (ecdsa)
 
 
