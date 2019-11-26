@@ -68,7 +68,7 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]) {
   for (int i=0; i<BLOCKS; i++) {
     for(size_t t=0; t<16; t++) {
       // todo: figure out who the message belongs to
-      w[i][t] = Integer(BITS, message[i][t], PUBLIC);
+      w[i][t] = Integer(BITS, message[i][t], CUST);
     }
   }
 

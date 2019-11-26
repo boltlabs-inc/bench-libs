@@ -6,7 +6,7 @@ using namespace emp;
 #define CUST BOB
 
 const int BITS = 32;
-const int BLOCKS = 1;
+const int BLOCKS = 2;
 
 /* implementation of SHA256 from FIPS PUB 180-4 
  * with the following modifications

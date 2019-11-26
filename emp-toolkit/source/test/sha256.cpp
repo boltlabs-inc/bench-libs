@@ -99,10 +99,26 @@ void test_components(int party, int range=1<<25, int runs = 10) {
   }
 }
 
+// this is not actually random for a variety of reasons, but it's ok.
+// The worst thing is that rand() produces the same output every time it's compiled
+// would be cool to get something that the same for both parties, but different
+// per compilation
+string gen_random(const int len) {
+  static const char alphanum[] =
+    "0123456789"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz";
+
+  string s = "";
+  for (int i = 0; i < len; ++i) {
+    s += alphanum[rand() % (sizeof(alphanum) - 1)];
+  }
+  return s;
+}
+
 void test_end_to_end() {
-  // known test vectors from di-mgt.com.au
-  //string msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
-  string msg = "abc";
+  // known test vector from di-mgt.com.au
+  string msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
   string expected = SHA256HashString(msg);
   string actual = run_secure_sha256(msg);
 
@@ -110,11 +126,20 @@ void test_end_to_end() {
   boost::algorithm::to_lower(actual);
 
   assert ( expected.compare(actual) == 0);
-  assert ( expected.compare("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad") == 0 );
+  assert ( expected.compare("248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1") == 0 );
 
-  // TODO: add randomized tests
-  // TODO: convert to 2-block tests
+  // randomized tests of 2-block-length messages
+  for (int len=56; len < 119; len++) {
+    msg = gen_random(len);
+    string expected = SHA256HashString(msg);
+    string actual = run_secure_sha256(msg);
 
+    boost::algorithm::to_lower(expected);
+    boost::algorithm::to_lower(actual);
+
+    //cout << "test " << len << "\n\t" << expected << "\n\t" << actual << endl;
+    assert ( expected.compare(actual) == 0);
+  }
 }
 
 // reference sha256 implementation by CryptoPP
@@ -138,7 +163,6 @@ string padSHA256(string const &input) {
   uint64_t length = input.size() * 8 + 1;
   size_t remainder = length % block_bits;
   size_t k = (remainder <= 448) ? 448 - remainder : 960 - remainder;
-  cout << "k: " << k << endl;
   std::string padding("\x80");
   padding.append(std::string(k/8, '\0'));
   --length;
@@ -163,6 +187,7 @@ string run_secure_sha256(string msg) {
         new CryptoPP::StringSink(padded_msg_hex)));
 
   // parse padded message into blocks
+  assert (padded_msg_hex.length() == BLOCKS * 128);
   string blk;
   uint message[BLOCKS][16] = {0};
   for (int b=0; b<BLOCKS; b++) {
@@ -185,6 +210,9 @@ string run_secure_sha256(string msg) {
   }
 
   res = change_base(res, 2, 16);
+  while (res.length() < 64) {
+    res = '0' + res;
+  }
   return res;
 }
 
