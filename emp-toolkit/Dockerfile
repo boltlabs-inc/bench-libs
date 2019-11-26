@@ -19,7 +19,7 @@ ADD source/ .
 ADD install_bolttools.sh .
 RUN ["bash", "install_bolttools.sh"]
 
-ADD install_testtools.sh
+ADD install_testtools.sh .
 RUN ["bash", "install_testtools.sh"]
 
 CMD ["/bin/bash"]
