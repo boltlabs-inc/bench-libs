@@ -16,10 +16,13 @@ install(DIRECTORY emp-sh2pc DESTINATION include/)
 
 # make a library with all our MPC primitives
 add_library(token_utils build_tokens/sha256.cpp build_tokens/ecdsa.cpp build_tokens/tokens.cpp)
+target_link_libraries(token_utils ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES})
 
 # make executable that implements generate_tokens protocol
 add_executable(token build_tokens/main.cpp)
-target_link_libraries(token ${EMP-OT_LIBRARIES} token_utils)
+target_link_libraries(token 
+  ${EMP-OT_LIBRARIES} 
+  token_utils)
 
 # testing: not sure what the best structure is for this section
 # this is NOT the usual cmake add_test function

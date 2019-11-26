@@ -23,7 +23,7 @@ void test_sigmas(int party, int range=1<<25, int runs=10) {
     unsigned long long x;
     prg.random_data(&x, 8);
     x %= range;
-    UInteger a(BITS,  x, ALICE);
+    Integer a(BITS,  x, ALICE);
 
     // make sure both parties have same clear values
     x = a.reveal<uint>(PUBLIC);
@@ -56,10 +56,10 @@ void test_components(int party, int range=1<<25, int runs = 10) {
     z %= range;
     n %= 32;
 
-    UInteger a(BITS,  x, ALICE);
-    UInteger b(BITS,  y, ALICE);
-    UInteger c(BITS,  z, BOB);
-    UInteger pn(BITS, n, BOB);
+    Integer a(BITS,  x, ALICE);
+    Integer b(BITS,  y, ALICE);
+    Integer c(BITS,  z, BOB);
+    Integer pn(BITS, n, BOB);
 
     // make sure both parties have same clear values
     x = a.reveal<uint>(PUBLIC);
