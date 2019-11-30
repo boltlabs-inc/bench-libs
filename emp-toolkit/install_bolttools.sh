@@ -6,7 +6,7 @@ mv test/ emp-sh2pc/
 
 # apply patch to add complement operation for integers
 cd ~/emp-tool
-git apply ~/not.patch
+git apply ~/integer.patch
 make
 make install
 

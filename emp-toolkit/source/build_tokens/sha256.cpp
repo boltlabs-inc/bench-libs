@@ -44,12 +44,15 @@ string get_bitstring(Integer x) {
 // result is 8 32-bit integers
 // hash   is 1 256-bit integer
 // hash = result[0] || result[1] || ... || result[7]
-void composeSHA256result(Integer result[8], Integer hash) {
-  for(int i=0; i<8; i++) {
-    cout << result[i].reveal<int>(PUBLIC) << endl;
-    //TODO fill this in
+Integer composeSHA256result(Integer result[8]) {
+  Integer thirtytwo(256, 32, PUBLIC);
+  result[0].resize(256, false);
+  Integer hash = result[0];
+  for(int i=1; i<8; i++) {
+    result[i].resize(256, false);
+    hash = (hash << thirtytwo) | result[i];
   }
-
+  return hash;
 }
 
 /* computes sha256 for a 2-block message

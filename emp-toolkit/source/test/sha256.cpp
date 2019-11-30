@@ -30,6 +30,7 @@ using namespace std;
 
 string SHA256HashString(string msg);
 string run_secure_sha256(string msg);
+string test_output(Integer result[8]);
 
 void test_sigmas(int party, int range=1<<25, int runs=10) {
   PRG prg;
@@ -98,6 +99,52 @@ void test_components(int party, int range=1<<25, int runs = 10) {
     assert (ROR32(x,n) == result);
   }
 }
+
+// tests compose function (takes 8-block result, squashes into long hash)
+// (comparison is to the in-the-clear version I've been using)
+// TODO This is broken
+void test_compose(int runs=50) {
+  // reveal result, parse final hash
+  PRG prg;
+  unsigned long long range = 1;
+  range = range << 32; // doing this in one line raises too-short error
+
+  for(int i = 0; i < runs; ++i) {
+    Integer result[8];
+    for(int b=0; b < 8; b++) {
+      unsigned long long rand;
+      prg.random_data(&rand, 8);
+      rand %= range;
+
+      result[i] = Integer(32, rand, ALICE);
+    //  cout << rand << " " << result[i].reveal<string>() << endl;
+    }
+
+    // in the clear
+    string res = "";
+    for (int r=0; r<8; r++){
+      res += get_bitstring(result[r]);
+      cout << get_bitstring(result[r])  << endl;
+    }
+
+    res = change_base(res, 2, 16);
+    while (res.length() < 64) {
+      res = '0' + res;
+    }
+    cout << "expected " << res << endl;
+
+    // secure -- note use of special unsigned reveal function
+    Integer hash = composeSHA256result(result);
+    string hres = change_base(hash.reveal_unsigned(PUBLIC), 10,16);
+    while (hres.length() < 64) {
+      hres = '0' + hres;
+    }
+    cout << "actual" << hres << endl;
+
+    assert ( hres.compare(res) == 0);
+  }
+}
+
 
 // this is not actually random for a variety of reasons, but it's ok.
 // The worst thing is that rand() produces the same output every time it's compiled
@@ -202,17 +249,13 @@ string run_secure_sha256(string msg) {
   Integer result[8];
   computeSHA256(message, result);
 
-  // reveal result, parse final hash
-  // TODO: parse hash securely
-  string res = "";
-  for (int r=0; r<8; r++){
-    res += get_bitstring(result[r]);
-  }
-
-  res = change_base(res, 2, 16);
+  // convert output to correct-length string
+  Integer hash = composeSHA256result(result);
+  string res = hash.reveal_unsigned(PUBLIC,16);
   while (res.length() < 64) {
     res = '0' + res;
   }
+
   return res;
 }
 
@@ -231,6 +274,7 @@ int main(int argc, char** argv) {
   // run unit tests
   test_components(party);
   test_sigmas(party);
+  test_compose();
 
   // run end-to-end tests
   test_end_to_end();

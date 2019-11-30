@@ -34,11 +34,10 @@ Integer signature_hash(bool msg[1024]) {
   Integer result[8];
   computeSHA256(message, result);
 
-  Integer hash(256, 0, PUBLIC);
-  composeSHA256result(result, hash);
+  Integer hash = composeSHA256result(result);
   
   cout << "successful hash of message" << endl;
-  cout << "\t" << hash.reveal<int>(PUBLIC) << endl;
+  cout << "\t" << change_base(hash.reveal<string>(PUBLIC), 10, 16) << endl;
 
   /*
   for (int j=0; j < 8; j++) {
@@ -46,14 +45,7 @@ Integer signature_hash(bool msg[1024]) {
   }
   */
 
-  //Integer intlen(256,32,PUBLIC);
-  //Integer squash(256, 0, PUBLIC);
-  //squash = squash | result[0];
-  //cout << "one chunk: " << change_base(get_bitstring(squash),2,16) << endl;
-  //squash = (squash << intlen) | result[1];
-  //cout << "resized result" << endl;
-
-
+  /*
   string res = "";
   for (int r=0; r<7; r++){
     res += get_bitstring(result[r]);
@@ -61,12 +53,14 @@ Integer signature_hash(bool msg[1024]) {
 
   res = change_base(res, 2, 16);
   cout <<"ecdsa hash: " << res << endl;
+  */
 
   // TODO: figure out correct output format!!
 
   //return message;
   Integer a(256, "123", PUBLIC);
   return a;
+  return hash;
 }
 
 // hard-coded conversion of secp256k1 point order 
@@ -126,7 +120,7 @@ void test_signature() {
   EcdsaPartialSig s;
   bool msg[1024] = {0};
   ECDSA_sig es = ecdsa_sign(msg, s);
-  cout << "signature is " << es.s.reveal<int>(PUBLIC) << endl;
+  cout << "signature is " << change_base(es.s.reveal<string>(PUBLIC),10,16) << endl;
 }
 
 
