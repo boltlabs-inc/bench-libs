@@ -1,14 +1,15 @@
 /*
- * TODO
- *
- * This will run end-to-end tests on the sha256 functionality
+ * This runs end-to-end tests on the sha256 functionality
  * and unit tests on the individual components
  * (in build_tokens/sha256.*)
  *
- * 1. generate test vectors (use bristol test vectors, plus some randomized one)
- * 2. import a reference sha256 implementation
- * 3. run tests in clear and under MPC
- * 4. compare results
+ * Unit tests verify that the component funtions produce the same output
+ * on normal integers and secret Integers.
+ *
+ * End-to-end tests are run on vectors from Briston (TODO: add link)
+ * and on vectors generated at random. Currently not using a seeded rand function (TODO)
+ * The reference implementation is CryptoPP.
+ * Padding is always executed in the clear; padding implementation is from some guy on stackoverflow
  *
  */
 #include <typeinfo>
@@ -32,7 +33,7 @@ string SHA256HashString(string msg);
 string run_secure_sha256(string msg);
 string test_output(Integer result[8]);
 
-void test_sigmas(int party, int range=1<<25, int runs=10) {
+void test_sigmas(int party, int range=1<<25, int runs=50) {
   PRG prg;
   for(int i = 0; i < runs; ++i) {
     unsigned long long x;
@@ -56,9 +57,11 @@ void test_sigmas(int party, int range=1<<25, int runs=10) {
     result = SIGMA_LOWER_1(a).reveal<uint>(PUBLIC);
     assert ((SIGMA_LOWER_1(x)) == result);
   }
+
+  cout << "Passed " << runs << " tests of SHA256 basic sigma functions." << endl;
 }
 
-void test_components(int party, int range=1<<25, int runs = 10) {
+void test_components(int party, int range=1<<25, int runs=50) {
   PRG prg;
   for(int i = 0; i < runs; ++i) {
     unsigned long long x,y,z, n;
@@ -98,6 +101,7 @@ void test_components(int party, int range=1<<25, int runs = 10) {
     result = ROR32(a, pn).reveal<uint>(PUBLIC);
     assert (ROR32(x,n) == result);
   }
+  cout << "Passed " << runs << " tests of SHA256 component functions." << endl;
 }
 
 // tests compose function (takes 8-block result, squashes into long hash)
@@ -111,45 +115,43 @@ void test_compose(int runs=50) {
 
   for(int i = 0; i < runs; ++i) {
     Integer result[8];
-    for(int b=0; b < 8; b++) {
-      unsigned long long rand;
-      prg.random_data(&rand, 8);
-      rand %= range;
-
-      result[i] = Integer(32, rand, ALICE);
-    //  cout << rand << " " << result[i].reveal<string>() << endl;
+    unsigned long long rs[8];
+    for(int r=0; r<8; r++) {
+      prg.random_data(&(rs[r]), 8);
+      rs[r] %= range;
     }
+    // this segfaults when I try to initilize results in the loop
+    result[0] = Integer(32, (uint) rs[0], ALICE);
+    result[1] = Integer(32, (uint) rs[1], BOB);
+    result[2] = Integer(32, (uint) rs[2], BOB);
+    result[3] = Integer(32, (uint) rs[3], ALICE);
+    result[4] = Integer(32, (uint) rs[4], BOB);
+    result[5] = Integer(32, (uint) rs[5], ALICE);
+    result[6] = Integer(32, (uint) rs[6], BOB);
+    result[7] = Integer(32, (uint) rs[7], ALICE);
 
     // in the clear
     string res = "";
     for (int r=0; r<8; r++){
       res += get_bitstring(result[r]);
-      cout << get_bitstring(result[r])  << endl;
     }
-
     res = change_base(res, 2, 16);
-    while (res.length() < 64) {
-      res = '0' + res;
-    }
-    cout << "expected " << res << endl;
 
     // secure -- note use of special unsigned reveal function
     Integer hash = composeSHA256result(result);
     string hres = change_base(hash.reveal_unsigned(PUBLIC), 10,16);
-    while (hres.length() < 64) {
-      hres = '0' + hres;
-    }
-    cout << "actual" << hres << endl;
 
-    assert ( hres.compare(res) == 0);
+    assert ( hres.compare(res) == 0 );
   }
+  cout << "Passed " << runs << " tests for SHA256 output formatting" << endl;
 }
 
 
-// this is not actually random for a variety of reasons, but it's ok.
-// The worst thing is that rand() produces the same output every time it's compiled
+// this is not actually random because I don't seed rand().
+// so it produces the same output every time it's compiled.
 // would be cool to get something that the same for both parties, but different
 // per compilation
+// It's also not uniform because of our sketchy modding.
 string gen_random(const int len) {
   static const char alphanum[] =
     "0123456789"
@@ -184,9 +186,10 @@ void test_end_to_end() {
     boost::algorithm::to_lower(expected);
     boost::algorithm::to_lower(actual);
 
-    //cout << "test " << len << "\n\t" << expected << "\n\t" << actual << endl;
     assert ( expected.compare(actual) == 0);
   }
+  
+  cout << "Passed 64 SHA256 end-to-end tests." << endl;
 }
 
 // reference sha256 implementation by CryptoPP
@@ -241,7 +244,6 @@ string run_secure_sha256(string msg) {
     for (int i=0; i<16; i++) {
       blk = padded_msg_hex.substr((b*128) + (i*8), 8);
       message[b][i] = (uint) strtoul(blk.c_str(), NULL,16);
-      // cout << "\t" << blk << " --> " << message[b][i] << endl;
     }
   }
 
@@ -278,26 +280,6 @@ int main(int argc, char** argv) {
 
   // run end-to-end tests
   test_end_to_end();
-
-
-
-
-
-  /*
-  uint message[BLOCKS][16] = {0};
-
-  UInteger result[8];
-  computeSHA256(message, result);
-
-  string res = "";
-  for (int r=0; r<7; r++){
-    res += get_bitstring(result[r]);
-  }
-
-  res = change_base(res, 2, 16);
-  cout <<"hash: " << res << endl;
-  */
-
 
   delete io;
   return 0;
