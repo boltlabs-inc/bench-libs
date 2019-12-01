@@ -12,10 +12,6 @@ using namespace std;
 
 const int QLEN = 256;
 
-struct ECDSA_sig {
-  Integer s;
-};
-
 // computes SHA256 hash of the input
 // todo; maybe require this in a different format 
 // (e.g. padded and in blocks)
@@ -32,7 +28,8 @@ void get_ECDSA_params(string *q);
 // rx, ry : public key point on curve
 // sk : private key integer
 // ki : private key
-struct ECDSA_sig ecdsa_sign(bool msg[1024], EcdsaPartialSig s);
+// returns signature, encoded in Integer
+Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig s);
 
 
 // small test function; expected result 2

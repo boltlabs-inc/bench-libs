@@ -53,6 +53,7 @@ int ecdsa_main(int argc, char** argv) {
     setup_semi_honest(io, party);
 
     test_signature();
+    cout << "toodle-oo" << endl;
 
     delete io;
     return 0;

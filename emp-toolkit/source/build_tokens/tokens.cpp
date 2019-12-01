@@ -28,8 +28,8 @@ void issue_tokens(EcdsaPartialSig sig1,
   validate_transactions();
 
   // sign new close transactions 
-  struct ECDSA_sig signed_merch_tx = ecdsa_sign(close_tx_escrow, sig1);
-  //struct ECDSA_sig signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
+  Integer signed_merch_tx = ecdsa_sign(close_tx_escrow, sig1);
+  //Integer signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
 
   // sign new pay token
   sign_token();
