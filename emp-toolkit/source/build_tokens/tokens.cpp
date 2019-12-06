@@ -1,6 +1,7 @@
 #include "tokens.h"
 #include "tokens-misc.h"
 #include "ecdsa.h"
+#include "hmac.h"
 #include "emp-sh2pc/emp-sh2pc.h"
 
 #define MERCH ALICE
@@ -15,7 +16,9 @@ void issue_tokens(EcdsaPartialSig sig1,
   bool close_tx_merch[1024]
   ) {
   // check old pay token
-  verify_token_sig();
+  Bit b = verify_token_sig(commitment, opening, old_state, oldpaytoken);
+
+  HMACKey key = commitment.key;
 
   // make sure wallets are well-formed
   compare_wallets();
@@ -32,7 +35,7 @@ void issue_tokens(EcdsaPartialSig sig1,
   //Integer signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
 
   // sign new pay token
-  sign_token();
+  PayToken newpaytoken = sign_token(state, key);
 
   // mask pay and close tokens
   mask_token(); // pay token
@@ -160,12 +163,62 @@ PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub) {
   return priv;
 }
 
-void sign_token() {
-
+PayToken sign_token(State state, HMACKey key) {
+  PayToken paytoken;
+  HMACsign(key, state, paytoken);
+  return paytoken;
 }
 
-Bit verify_token_sig() {
-  Bit b;
+Bit verify_token_sig(HMACKeyCommitment commitment, HMACKeyCommitmnetOpening opening, State oldState, PayToken paytoken) {
+
+  // check that the opening is valid 
+  int message[2][16];
+
+  for(int i=0; i<16; i++) {
+    message[0][i] = opening.key.key[i];
+  }
+
+  // Padding
+  message[1][0] = 0x80000000;
+  message[1][1] = 0x00000000;
+  message[1][2] = 0x00000000;
+  message[1][3] = 0x00000000;
+  message[1][4] = 0x00000000;
+  message[1][5] = 0x00000000;
+  message[1][6] = 0x00000000;
+  message[1][7] = 0x00000000;
+  message[1][8] = 0x00000000;
+  message[1][9] = 0x00000000;
+  message[1][10] = 0x00000000;
+  message[1][11] = 0x00000000;
+  message[1][12] = 0x00000000;
+  message[1][13] = 0x00000000;
+
+  // Message length
+  message[1][14] = 0x00000000;
+  message[1][15] = 0x00000200;
+
+  Integer hashresult[8];
+
+  computeSHA256(message, hashresult);
+
+  Bit b; // TODO initialize to 0
+
+  for(int i=0; i<8; i++) {
+    if(commitment.commitment[i] != hashresult[i]) {
+      b = 1;
+    }
+  }
+
+  // Sign the old state again to compare
+  PayToken recomputed_paytoken;
+  HMACsign(opening.key.key, oldState, recomputed_paytoken);
+
+  for(int i=0; i<8; i++) {
+    if(recomputed_paytoken.paytoken[i] != paytoken.paytoken[i]) {
+      b = 1;
+    }
+  }
   return b;
 }
 

@@ -34,8 +34,11 @@ void issue_tokens(EcdsaPartialSig sig1,
  * for the pay token. We haven't decided which one to use.
  * Also haven't finalized representation for tokens.
  */
-void sign_token();
-Bit verify_token_sig();
+// void sign_token();
+PayToken sign_token(State state, HMACKey key);
+// Bit verify_token_sig();
+Bit verify_token_sig(HMACKeyCommitment commitment, HMACKeyCommitmnetOpening opening, State oldState, PayToken paytoken);
+
 
 /* checks that the wallets are appropriately updated
  * 0. old wallet ID matches publicly revealed wkpi
