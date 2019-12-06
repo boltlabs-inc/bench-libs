@@ -22,6 +22,39 @@ using namespace std;
  * Comments are sort of in doxygen style.
  */
 
+/* HMAC Key structure.
+ * HMAC Keys are the length of the block-size of the underlying hash functions
+ * SHA256 has a block size of 512 bits, so we need 16 integers to represent the whole thing
+ */
+struct HMACKey {
+  int key[16];
+};
+
+/* A Commitment to an HMAC Key
+ * We are using hash based commitments, so this is really just the output of a SHA256 invocation
+ */
+struct HMACKeyCommitment {
+  int commitment[8];
+};
+
+/* The opening to a commitment to an HMAC key
+ * To open a hash based commitment, we need an actual key and potentially randomness
+ * GABE: I'm throwing randomness in here for now, but we can rip it out?
+ */
+struct HMACKeyCommitmnetOpening {
+  HMACKey key;
+  int randomness[8];
+};
+
+/* This is a pay token
+ * Is is an HMAC computed on the state 
+ * The output of HMAC is the underlying block size.  In this case 256 bits
+ */
+struct PayToken {
+  int paytoken[8];
+};
+
+
 /* ECDSA public key type 
  * \param pubkey    : a public key. TYPISSUE - probably not an integer */
 struct PubKey{
