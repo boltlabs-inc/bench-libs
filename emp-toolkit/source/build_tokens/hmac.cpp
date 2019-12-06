@@ -9,7 +9,7 @@ using namespace std;
 /* This function executes the inner hash of the HMAC algorithm
  * The resulting hash is returned in innerhashresult
  * We are computing SHA256(  ( key ^ ipad ) || state )
- * This requires 3 SHA256 rouns (state is ~960 bits and key^ipad is 512bits)
+ * This requires 3 SHA256 rouns (state is ~928 bits and key^ipad is 512bits)
  */
 void innerhash(HMACKey key, State state, int innerhashresult[8]) {
 
