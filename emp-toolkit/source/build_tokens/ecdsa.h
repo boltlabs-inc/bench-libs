@@ -20,7 +20,7 @@ Integer signature_hash(Integer m);
 // hard-coded conversion of secp256k1 point order 
 // (e.g. modulus)
 // you can go check that these have the same value
-void get_ECDSA_params(string *q); 
+string get_ECDSA_params(); 
 
 // ecdsa-signs a message based on the given parameters
 // parameters here are appended -c because they're in the clear
