@@ -1,6 +1,6 @@
 #include <typeinfo>
 #include "emp-sh2pc/emp-sh2pc.h"
-#include "tokens.h"
+#include "tokens-misc.h"
 #include "hmac.h"
 #include "sha256.h"
 using namespace emp;
@@ -11,11 +11,11 @@ using namespace std;
  * We are computing SHA256(  ( key ^ ipad ) || state )
  * This requires 3 SHA256 rouns (state is ~928 bits and key^ipad is 512bits)
  */
-void innerhash(HMACKey key, State state, int innerhashresult[8]) {
+void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
 
   // Preparing the buffer for the hash input
 
-  int message[3][16];
+  Integer message[3][16];
 
   // XORing the key with inner pad
   for(int i=0; i<16; i++) {
@@ -79,11 +79,11 @@ void innerhash(HMACKey key, State state, int innerhashresult[8]) {
  * the resulting hash is returned in outerhashresult
  * We are computing SHA256( ( key ^ opad ) || innerhashresult )
  */
-void outerhash(HMACKey key, int innerhashresult[8], int outerhashresult[8]) {
+void outerhash(HMACKey key, Integer innerhashresult[8], Integer outerhashresult[8]) {
 
   // Preparing the buffer for the hash input
   
-  int message[2][16];
+  Integer message[2][16];
 
   // XORing the key with inner pad
   
@@ -110,9 +110,9 @@ void outerhash(HMACKey key, int innerhashresult[8], int outerhashresult[8]) {
 } 
   
   
-void HMACsign(HMACKey merch_key, State state, PayToken paytoken) {
+void HMACsign(HMACKey_d merch_key, State_d state, PayToken_d paytoken) {
   
-  int innerhashresult[8];
+  Integer innerhashresult[8];
   
   innerhash(merch_key, state, innerhashresult);
   
