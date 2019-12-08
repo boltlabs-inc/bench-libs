@@ -16,13 +16,14 @@ using namespace std;
 #include "cryptopp/hmac.h"
 #include "cryptopp/sha.h"
 #include "cryptopp/sha3.h"
+#include "cryptopp/secblock.h"
 #define byte unsigned char
 
 // boost header to compare strings
 #include <boost/algorithm/string.hpp>
 
-string reference_HMAC_sign(string key, string msg);
-string run_secure_HMACsign(string key, string msg);
+string reference_HMAC_sign(CryptoPP::SecByteBlock key, string msg);
+string run_secure_HMACsign(uint8_t key[64], string msg);
 string test_output(Integer result[8]);
 
 // this is not actually random because I don't seed rand().
@@ -67,7 +68,7 @@ HMAC-SHA256(/tmp/msg)= af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b78
 // The msgs we are signing are 116 bytes long, or 29 ints long
 void test_end_to_end() {
 
-  AutoSeededRandomPool prng;
+  // AutoSeededRandomPool prng;
 
   uint8_t test_key_bytes[64] = 
     { 0x76, 0x6f, 0x6e, 0x6a, 0x75, 0x71, 0x66, 0x62, 
@@ -77,14 +78,14 @@ void test_end_to_end() {
       0x6d, 0x67, 0x73, 0x69, 0x6c, 0x72, 0x69, 0x74, 
       0x75, 0x78, 0x73, 0x6f, 0x66, 0x67, 0x72, 0x63, 
       0x66, 0x63, 0x71, 0x79, 0x6e, 0x7a, 0x75, 0x6c, 
-      0x7a, 0x63, 0x73, 0x75, 0x74, 0x6f, 0x68, 0x6d }
+      0x7a, 0x63, 0x73, 0x75, 0x74, 0x6f, 0x68, 0x6d };
 
-  SecByteBlock key(test_key_bytes, 64);
+  CryptoPP::SecByteBlock key(test_key_bytes, 64);
   // prng.GenerateBlock(key, key.size());
 
   string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkz";
   string expected = reference_HMAC_sign(key, msg);
-  string actual = run_secure_HMACsign(key, msg);
+  string actual = run_secure_HMACsign(test_key_bytes, msg);
 
   boost::algorithm::to_lower(expected);
   boost::algorithm::to_lower(actual);
@@ -98,7 +99,7 @@ void test_end_to_end() {
     // TODO GENERATE RANDOM KEYS
     msg = gen_random(116);
     string expected = reference_HMAC_sign(key, msg);
-    string actual = run_secure_HMACsign(key, msg);
+    string actual = run_secure_HMACsign(test_key_bytes, msg);
 
     boost::algorithm::to_lower(expected);
     boost::algorithm::to_lower(actual);
@@ -111,14 +112,15 @@ void test_end_to_end() {
 }
 
 // reference sha256 implementation by CryptoPP
-string reference_HMAC_sign(string key, string msg){
-try
-  {
-      HMAC< SHA256 > hmac(key, key.size());
+string reference_HMAC_sign(CryptoPP::SecByteBlock key, string msg) {
 
-      StringSource ss2(plain, true, 
-          new HashFilter(hmac,
-              new StringSink(mac)
+  string mac;
+  try {
+      CryptoPP::HMAC< CryptoPP::SHA256 > hmac(key, key.size());
+
+      CryptoPP::StringSource ss2(msg, true, 
+          new CryptoPP::HashFilter(hmac,
+              new CryptoPP::StringSink(mac)
           ) // HashFilter      
       ); // StringSource
   }
@@ -127,32 +129,35 @@ try
       cerr << e.what() << endl;
       exit(1);
   }
+  return mac;
 }
 
 
 // test hmac implementation 
-string run_secure_HMACsign(string key, string msg) {
+string run_secure_HMACsign(uint8_t key[64], string msg) {
 
   //TODO A LOT OF THIS IS WRONG 
-  HMACKey merch_key;
-  memcpy(merch_key.key, msg.c_str(), 64);
-  State state;
-  memcpy(state.nonce.nonce, msg.c_str(), sizeof(Nonce));
-  memcpy(state.rl.revlock, msg.c_str() + sizeof(Nonce), sizeof(RevLock));
-  memcpy(state.balance_cust, msg.c_str() + sizeof(Nonce) + sizeof(RevLock), sizeof(int));
-  memcpy(state.balance_merch, msg.c_str() 
-    + sizeof(Nonce) + sizeof(RevLock) + sizeof(int), sizeof(int));
-  memcpy(state.txid_merch, msg.c_str() 
-    + sizeof(Nonce) + sizeof(RevLock) + sizeof(int)
-    + sizeof(int), sizeof(Txid));
-  memcpy(state.txid_escrow, msg.c_str() 
-    + sizeof(Nonce) + sizeof(RevLock) + sizeof(int)
-    + sizeof(int) + sizeof(Txid), sizeof(Txid));
+  HMACKey_l merch_key_l;
+  memcpy(merch_key_l.key, msg.c_str(), 64);
+  State_l state_l;
+  memcpy(state_l.nonce.nonce, msg.c_str(), sizeof(Nonce_l));
+  memcpy(state_l.rl.revlock, msg.c_str() + sizeof(Nonce_l), sizeof(RevLock_l));
+  memcpy(&(state_l.balance_cust), msg.c_str() + sizeof(Nonce_l) + sizeof(RevLock_l), sizeof(uint32_t));
+  memcpy(&(state_l.balance_merch), 
+    msg.c_str() + sizeof(Nonce_l) + sizeof(RevLock_l) + sizeof(uint32_t), 
+      sizeof(uint32_t));
+  memcpy(state_l.txid_merch.txid, 
+    msg.c_str() + sizeof(Nonce_l) + sizeof(RevLock_l) + sizeof(uint32_t) + sizeof(uint32_t),
+      sizeof(Txid_l));
+  memcpy(state_l.txid_escrow.txid, msg.c_str() 
+    + sizeof(Nonce_l) + sizeof(RevLock_l) + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(Txid_l),
+      sizeof(Txid_l));
 
   // MPC - run hmac 
-  PayToken paytoken;
-  HMACsign(merch_key, state, PayToken paytoken);
-  computeSHA256(message, result);
+  PayToken_d paytoken_d;
+  HMACKey_d merch_key_d = distribute_HMACKey(merch_key_l, MERCH);
+  State_d state_d = distribute_State(state_l, CUST);
+  HMACsign(merch_key_d, state_d, paytoken_d);
 
   // convert output to correct-length string
   // Integer hash = composeSHA256result(result);

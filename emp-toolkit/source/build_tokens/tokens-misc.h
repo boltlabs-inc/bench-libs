@@ -55,6 +55,14 @@ struct Nonce_d {
 	Integer nonce[3];
 };
 
+struct Txid_l {
+  uint32_t txid[8];
+};
+
+struct Txid_d {
+  Integer txid[8];
+};
+
 /* state type
  *
  * \param pkC           : customer public key 
@@ -69,8 +77,8 @@ struct State_l {
   RevLock_l rl;
   int32_t balance_cust;
   int32_t balance_merch;
-  uint32_t txid_merch[8];
-  uint32_t txid_escrow[8];
+  Txid_l txid_merch;
+  Txid_l txid_escrow;
 };
 
 struct State_d {
@@ -78,8 +86,8 @@ struct State_d {
   RevLock_d rl;
   Integer balance_cust;
   Integer balance_merch;
-  Integer txid_merch[8];
-  Integer txid_escrow[8];
+  Txid_d txid_merch;
+  Txid_d txid_escrow;
 };
 
 /* Partial ECDSA signature
@@ -99,22 +107,25 @@ struct EcdsaPartialSig_d {
 
 /********************* Casting functions  **********************/
 
-HMACKey_d distribute_HMACKey(HMACKey_l key);
+HMACKey_d distribute_HMACKey(HMACKey_l key, int party);
 HMACKey_l localize_HMACKey(HMACKey_d key);
 
-RevLock_d distribute_RevLock(RevLock_l revlock);
+RevLock_d distribute_RevLock(RevLock_l revlock, int party);
 RevLock_l localize_RevLock(RevLock_d revlock);
 
-PayToken_d distribute_PayToken(PayToken_l paytoken);
+PayToken_d distribute_PayToken(PayToken_l paytoken, int party);
 PayToken_l localize_PayToken(PayToken_d paytoken);
 
-Nonce_d distribute_Nonce(Nonce_l nonce);
+Nonce_d distribute_Nonce(Nonce_l nonce, int party);
 Nonce_l localize_Nonce(Nonce_d nonce);
 
-State_d distribute_State(State_l state);
+Txid_d distribute_Txid(Txid_l txid, int party);
+Txid_l localize_Txid(Txid_d txid);
+
+State_d distribute_State(State_l state, int party);
 State_l localize_State(State_d state);
 
-EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l ecdsapartialsig);
+EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l ecdsapartialsig, int party);
 EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d ecdsapartialsig);
 
 // void distribute_HMACKey(HMACKey_d destination, HMACKey_l source);
