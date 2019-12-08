@@ -34,8 +34,3 @@ Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig_l s);
 // ecdsa signs a hashed private message
 Integer sign_hashed_msg(Integer e, EcdsaPartialSig_d partialsig);
 
-
-// small test function; expected result 2
-void test_signature();
-
-

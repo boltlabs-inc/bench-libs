@@ -16,7 +16,7 @@ install(DIRECTORY emp-sh2pc DESTINATION include/)
 
 # make a library with all our MPC primitives
 add_library(token_utils build_tokens/sha256.cpp build_tokens/hmac.cpp build_tokens/ecdsa.cpp build_tokens/tokens.cpp build_tokens/tokens-misc.cpp)
-target_link_libraries(token_utils ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES})
+target_link_libraries(token_utils ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES} ${EMP-OT_LIBRARIES} )
 
 # make executable that implements generate_tokens protocol
 add_executable(token build_tokens/main.cpp)
@@ -33,13 +33,12 @@ macro (add_test _name)
     ${Boost_LIBRARIES}
     ${GMP_LIBRARIES}
     ${EMP-OT_LIBRARIES}
+    libcryptopp.a
     token_utils)
 endmacro()
 
 add_test (sha256)
+add_test (ecdsa)
 add_test (hmac)
-target_link_libraries(sha256 libcryptopp.a)
-target_link_libraries(hmac libcryptopp.a)
-#add_test (ecdsa)
 
 
