@@ -14,20 +14,22 @@ using namespace std;
 void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
 
   // Preparing the buffer for the hash input
+  Integer ipad(32, 909522486, PUBLIC);
+
 
   Integer message[3][16];
 
   // XORing the key with inner pad
   for(int i=0; i<16; i++) {
-    message[0][i] = key.key[i] ^ ipad_int;
+    message[0][i] = key.key[i] ^ ipad;
   }
 
   // Packing the state structure 
   // nonce is 96 bits long
-  message[1][0] = state.nonce.data[0];
-  message[1][1] = state.nonce.data[1];
-  message[1][2] = state.nonce.data[2];
-  // message[1][3] = state.nonce.data[3];  
+  message[1][0] = state.nonce.nonce[0];
+  message[1][1] = state.nonce.nonce[1];
+  message[1][2] = state.nonce.nonce[2];
+  // message[1][3] = state.nonce.nonce[3];  
 
   // Rev lock is 256 bits, but is currently stored in a bit array
   // 256/32 = 8
@@ -41,7 +43,7 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
   message[1][10] = state.rl.revlock[7];
 
   // Blance escrowomer -- 1 int
-  message[1][11] = state.balance_escrow;
+  message[1][11] = state.balance_cust;
   message[1][12] = state.balance_merch;
 
   // Starting the txid_merch.  96 bits fit in this block
@@ -68,27 +70,30 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
 
   // a single 1 bit, followed by 0's
   // 64 bit big-endian representation of 928
-  message[2][13] = 0x80000000;
-  message[2][14] = 0x00000000;
-  message[2][15] = 0x000003a0;
+  message[2][13] = Integer(32, -2147483648, PUBLIC); //0x80000000;
+  message[2][14] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[2][15] = Integer(32, 928, PUBLIC); //0x000003a0;
 
-  computeSHA256(message, innerhasresult);
+  // TODO: We need a version of SHA256 that can take this as input
+  // computeSHA256(message, innerhashresult);
 }
 
 /* This function execute the outer hash of the HMAC algorithm
  * the resulting hash is returned in outerhashresult
  * We are computing SHA256( ( key ^ opad ) || innerhashresult )
  */
-void outerhash(HMACKey key, Integer innerhashresult[8], Integer outerhashresult[8]) {
+void outerhash(HMACKey_d key, Integer innerhashresult[8], Integer outerhashresult[8]) {
 
   // Preparing the buffer for the hash input
-  
+  Integer opad(32, 1549556828, PUBLIC);
+
+
   Integer message[2][16];
 
   // XORing the key with inner pad
   
   for(int i=0; i<16; i++) {
-    message[0][i] = key.key[i] ^ opad_int;
+    message[0][i] = key.key[i] ^ opad;
   }
   
   for(int i=0; i<8; i++) {
@@ -96,17 +101,18 @@ void outerhash(HMACKey key, Integer innerhashresult[8], Integer outerhashresult[
   }
   
   //padding and length bits
-  message[1][9]  = 0x80000000;
-  message[1][10] = 0x00000000;
-  message[1][11] = 0x00000000;
-  message[1][12] = 0x00000000; 
-  message[1][13] = 0x00000000;
+  message[1][9]  = Integer(32, -2147483648, PUBLIC); //= 0x80000000;
+  message[1][10] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][11] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][12] = Integer(32, 0, PUBLIC); //0x00000000; 
+  message[1][13] = Integer(32, 0, PUBLIC); //0x00000000;
   
   // 64 bit big-endian representaiton of 768
-  message[1][14] = 0x00000000; 
-  message[1][15] = 0x00000300; 
+  message[1][14] = Integer(32, 0, PUBLIC); //0x00000000; 
+  message[1][15] = Integer(32, 768, PUBLIC); //0x00000300; 
 
-  computeSHA256(message, outerhasresult);
+  // TODO: We need a version of SHA256 that can take this as input
+  // computeSHA256(message, outerhashresult);
 } 
   
   

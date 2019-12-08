@@ -4,6 +4,7 @@
  */
 #include <typeinfo>
 #include "emp-sh2pc/emp-sh2pc.h"
+#include "build_tokens/tokens-misc.h"
 #include "build_tokens/hmac.h"
 using namespace emp;
 using namespace std;
@@ -12,6 +13,7 @@ using namespace std;
 #include "cryptopp/files.h"
 #include "cryptopp/filters.h"
 #include "cryptopp/hex.h"
+#include "cryptopp/hmac.h"
 #include "cryptopp/sha.h"
 #include "cryptopp/sha3.h"
 #define byte unsigned char

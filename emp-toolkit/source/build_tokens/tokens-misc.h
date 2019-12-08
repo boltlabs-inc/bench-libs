@@ -1,5 +1,6 @@
 #pragma once
 #include "emp-sh2pc/emp-sh2pc.h"
+#include "tokens.h"
 using namespace emp;
 
 #define MERCH ALICE
@@ -40,7 +41,7 @@ struct PayToken_l {
 };
 
 struct PayToken_d {
-  int paytoken[8];
+  Integer paytoken[8];
 };
 
 /* This is a nonce.  Its used to prevent double spends
