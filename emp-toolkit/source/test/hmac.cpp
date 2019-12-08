@@ -6,6 +6,7 @@
 #include "emp-sh2pc/emp-sh2pc.h"
 #include "build_tokens/tokens-misc.h"
 #include "build_tokens/hmac.h"
+#include "build_tokens/sha256.h"
 using namespace emp;
 using namespace std;
 
@@ -159,12 +160,11 @@ string run_secure_HMACsign(uint8_t key[64], string msg) {
   State_d state_d = distribute_State(state_l, CUST);
   HMACsign(merch_key_d, state_d, paytoken_d);
 
-  // convert output to correct-length string
-  // Integer hash = composeSHA256result(result);
-  string res; // = hash.reveal_unsigned(PUBLIC,16);
-  // while (res.length() < 64) {
-    // res = '0' + res;
-  // }
+  Integer hash = composeSHA256result(paytoken_d.paytoken);
+  string res = hash.reveal_unsigned(PUBLIC,16);
+  while (res.length() < 64) {
+    res = '0' + res;
+  }
 
   return res;
 }
