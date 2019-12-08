@@ -68,4 +68,11 @@ Integer composeSHA256result(Integer result[8]);
  */
 void computeSHA256(uint message[BLOCKS][16], Integer result[8]);
 
+/* computes sha256 for a 2-block message
+ * output is stored in result
+ * composed of 8 32-bit Integers such that
+ * sha256(message) = result[0] || result[1] || ... || result[7]
+ * this takes already distributed variables.
+ */
+void computeSHA256_d(Integer message[BLOCKS][16], Integer result[8]);
 

@@ -75,7 +75,7 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
   message[2][15] = Integer(32, 928, PUBLIC); //0x000003a0;
 
   // TODO: We need a version of SHA256 that can take this as input
-  // computeSHA256(message, innerhashresult);
+  computeSHA256_d(message, innerhashresult);
 }
 
 /* This function execute the outer hash of the HMAC algorithm
@@ -112,7 +112,7 @@ void outerhash(HMACKey_d key, Integer innerhashresult[8], Integer outerhashresul
   message[1][15] = Integer(32, 768, PUBLIC); //0x00000300; 
 
   // TODO: We need a version of SHA256 that can take this as input
-  // computeSHA256(message, outerhashresult);
+  computeSHA256_d(message, outerhashresult);
 } 
   
   

@@ -1,5 +1,5 @@
 #include "emp-sh2pc/emp-sh2pc.h"
-#include "tokens-misc.cpp"
+#include "tokens-misc.h"
 
 HMACKey_d distribute_HMACKey(HMACKey_l key){
 
