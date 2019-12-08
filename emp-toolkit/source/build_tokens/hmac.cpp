@@ -47,26 +47,26 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
   message[1][12] = state.balance_merch;
 
   // Starting the txid_merch.  96 bits fit in this block
-  message[1][13] = state.txid_merch[0];
-  message[1][14] = state.txid_merch[1];
-  message[1][15] = state.txid_merch[2];
+  message[1][13] = state.txid_merch.txid[0];
+  message[1][14] = state.txid_merch.txid[1];
+  message[1][15] = state.txid_merch.txid[2];
 
-  // continue with the txid_merch in the 3rd block
-  message[2][0] = state.txid_merch[3];
-  message[2][1] = state.txid_merch[4];
-  message[2][2] = state.txid_merch[5];
-  message[2][3] = state.txid_merch[6];
-  message[2][4] = state.txid_merch[7];
+  // continue with the txid_merch.txid in the 3rd block
+  message[2][0] = state.txid_merch.txid[3];
+  message[2][1] = state.txid_merch.txid[4];
+  message[2][2] = state.txid_merch.txid[5];
+  message[2][3] = state.txid_merch.txid[6];
+  message[2][4] = state.txid_merch.txid[7];
 
   // Now packing txid_escrow
-  message[2][5] = state.txid_escrow[0];
-  message[2][6] = state.txid_escrow[1];
-  message[2][7] = state.txid_escrow[2];
-  message[2][8] = state.txid_escrow[3];
-  message[2][9] = state.txid_escrow[4];
-  message[2][10] = state.txid_escrow[5];
-  message[2][11] = state.txid_escrow[6];
-  message[2][12] = state.txid_escrow[7];
+  message[2][5] = state.txid_escrow.txid[0];
+  message[2][6] = state.txid_escrow.txid[1];
+  message[2][7] = state.txid_escrow.txid[2];
+  message[2][8] = state.txid_escrow.txid[3];
+  message[2][9] = state.txid_escrow.txid[4];
+  message[2][10] = state.txid_escrow.txid[5];
+  message[2][11] = state.txid_escrow.txid[6];
+  message[2][12] = state.txid_escrow.txid[7];
 
   // a single 1 bit, followed by 0's
   // 64 bit big-endian representation of 928
