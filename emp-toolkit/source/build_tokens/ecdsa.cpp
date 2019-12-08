@@ -54,15 +54,10 @@ string get_ECDSA_params() {
 // parameters here are appended -c because they're in the clear
 // mc : message text (in the clear)
 // pubsig : partial ecdsa signature in the clear (see token.h)
-Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig pubsig) {
-
-  // shared inputs: ECDSA params
-  // q is public
-  string qcs = get_ECDSA_params();
-  Integer q(257, qcs, PUBLIC);
+Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig_l pubsig) {
 
   // merchant inputs
-  PrivateEcdsaPartialSig partialsig = setEcdsaPartialSig(pubsig);
+  EcdsaPartialSig_d partialsig = distribute_EcdsaPartialSig(pubsig);
   // cout << "partialsig " << partialsig.r.reveal<int>(PUBLIC) << endl;
 
   // customer inputs
@@ -70,6 +65,13 @@ Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig pubsig) {
 
   // hash input
   Integer e = signature_hash(msg);
+  return sign_hashed_msg(e, partialsig);
+}
+
+Integer sign_hashed_msg(Integer e, EcdsaPartialSig_d partialsig) {
+  // get shared/fixed q
+  Integer q(257, get_ECDSA_params(), PUBLIC);
+
   e.resize(257, true);
   e = e % q;
 
@@ -82,19 +84,10 @@ Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig pubsig) {
   s = partialsig.k_inv * s;
   s = s % q;
 
-  s.resize(256,true);
+  //s.resize(256,true);
 
-  cout << "i. signature is " << s.reveal<string>(PUBLIC) << endl;
+  //cout << "i. signature is " << s.reveal<string>(PUBLIC) << endl;
   return s;
-}
-
-// very bad fake test
-void test_signature() {
-  EcdsaPartialSig s;
-  bool msg[1024] = {0};
-  Integer sig = ecdsa_sign(msg, s);
-  cout << "ii. signature is " << change_base(sig.reveal<string>(PUBLIC),10,16) << endl;
-  cout << "goodbye" << endl;
 }
 
 

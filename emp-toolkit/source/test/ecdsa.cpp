@@ -16,121 +16,46 @@
 using namespace emp;
 using namespace std;
 
-// crypto++ headers
-#include "cryptopp/aes.h"
-#include "cryptopp/asn.h"
-#include "cryptopp/eccrypto.h"
-#include "cryptopp/filters.h"
-#include "cryptopp/hex.h"
-#include "cryptopp/modes.h"
-#include "cryptopp/oids.h"
-#include "cryptopp/osrng.h"
-#include "cryptopp/rdrand.h"
-#include "cryptopp/secblock.h"
-#define byte unsigned char
-namespace ASN1 = CryptoPP::ASN1;
+void test_vectors_from_file() {
+  // read from file
+  string msg = "e4a89eb40da775f8d65828c6cfac3609742fd550c568744c38dd755d24cea567";
+  string expected = "304402207a314983197ca025e5c212cba99e65288923cc9bef8bcd7035d2a61d64f44e1c02207ba13f36a001239d4d653c5d3438bd0b107df24c50a82f10f0e44523a0af34c5";
+  string r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
+  string k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
 
-// reference ecdsa implementation from cryptopp
-// I don't know how to extract the partial signature we need for emp-toolkit from this
-string test_reference() {
-  CryptoPP::AutoSeededRandomPool prng;
-  CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::PrivateKey privatekey;
 
-  privatekey.Initialize( prng, ASN1::secp256k1() );
-  bool result = privatekey.Validate( prng, 3);
-  if( !result ) {
-    return "private key failed";
-  }
+  Integer e(256, msg, PUBLIC);
+  
+  EcdsaPartialSig_l psl;
+  psl.r = r;
+  psl.k_inv = k_inv;
+  EcdsaPartialSig_d psd = distribute_EcdsaPartialSig(psl);
 
-  //const CryptoPP::Integer& x = privatekey.GetPrivateExponent();
+  Integer result = sign_hashed_msg(e, psd);
+  string actual = result.reveal<string>(PUBLIC);
 
-  CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::PublicKey publickey;
-  privatekey.MakePublicKey(publickey);
+  cout << "actual   : " << actual << endl;
+  cout << "expected : " << expected << endl;
 
-  if (! publickey.Validate(prng,3)){
-    return "public key failed";
-  }
-
-  CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::Signer signer(privatekey);
-
-  publickey.getTrapdoorFunctionInterface();
-
-  string message = "oh no why is this so hard";
-  size_t siglen = signer.MaxSignatureLength();
-  string sig(siglen, 0x00);
-
-  siglen = signer.SignMessage(prng, (const byte*)&message[0], message.size(), (byte*)&sig[0] );
-
-  cout << "siglen: " << siglen << endl;
-  /*
-  CryptoPP::StringSource s(message, true,
-    new CryptoPP::SignerFilter (prng,
-      signer,
-      new CryptoPP::StringSink( sig )));
-*/
-    
-  CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::Verifier verifier(publickey);
-  CryptoPP::StringSource ss(sig+message, true,
-    new CryptoPP::SignatureVerificationFilter(
-      verifier, 
-      new CryptoPP::ArraySink( (byte*) &result, sizeof(result) )));
-
-  if (!result) {
-    return "verification failed";
-  }
-
-  return "wow ok";
+  cout << "failed one test" << endl;
+  
 }
 
-
-// this is one way to generate identical prngs.
-// we can use this if I figure out how SignMessage() above uses the PRNG to generate k.
-void test_replicable_rng() {
-  CryptoPP::OFB_Mode<CryptoPP::AES>::Encryption prng;
-  CryptoPP::OFB_Mode<CryptoPP::AES>::Encryption prng2;
-
-  CryptoPP::SecByteBlock seed(32+16);
-  CryptoPP::OS_GenerateRandomBlock(false, seed, seed.size());
-
-  prng.SetKeyWithIV(seed, 32, seed+32, 16);
-  prng2.SetKeyWithIV(seed, 32, seed+32, 16);
-  string k,l;
-
-  CryptoPP::SecByteBlock key(16);
-  CryptoPP::SecByteBlock lok(16);
-
-  prng.GenerateBlock(key, key.size());
-  prng2.GenerateBlock(lok, lok.size());
-
-  CryptoPP::HexEncoder hex(new CryptoPP::StringSink(k));
-  hex.Put(key, key.size());
-  hex.MessageEnd();
-
-  hex.Detach(new CryptoPP::StringSink(l));
-  hex.Put(lok, lok.size());
-  hex.MessageEnd();
-
-  cout << "Key: " << k << endl;
-  cout << "Lok: " << l << endl;
-
-}
 
 int main(int argc, char** argv) {
   // run in semihonest library
   int port, party;
-  if (argc != 3) {
+  if (argc != 2) {
     cerr << "ERROR: not enough args" << endl;
     return 1;
   }
-  parse_party_and_port(argv, &party, &port);
+  party = atoi(argv[1]);
+  port = 12345;
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
 
-  test_reference();
-  // run end-to-end tests
-  //test_vectors();
-
+  test_vectors_from_file();
 
   delete io;
   return 0;

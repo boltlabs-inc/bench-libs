@@ -129,16 +129,22 @@ State_l localize_State(State_d state){
   return to_return;
 }
 
-EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l ecdsapartialsig){
+EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l psl){
   EcdsaPartialSig_d to_return;
   // GABE TODO
+  to_return.r = Integer(257, psl.r, MERCH);
+  to_return.k_inv = Integer(513, psl.k_inv, MERCH);
 
   return to_return;
 }
 
-EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d ecdsapartialsig){
+// honestly, if we ever need to do this (which we shouldn't outside of testing)
+// we definitely should not reveal them publicly.
+EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d psd){
   EcdsaPartialSig_l to_return;
-  // GABE TODO
+
+  to_return.r = psd.r.reveal<string>(PUBLIC);
+  to_return.k_inv = psd.k_inv.reveal<string>(PUBLIC);
 
   return to_return;
 }

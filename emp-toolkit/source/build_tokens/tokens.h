@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <string>
+#include "tokens-misc.h"
 using namespace std;
 
 /*
@@ -184,9 +185,9 @@ void build_masked_tokens_merch(
 
   bool close_mask[256],
   bool pay_mask[256],
-  EcdsaPartialSig sig1,
-  EcdsaPartialSig sig2,
-  EcdsaPartialSig sig3
+  struct EcdsaPartialSig_l sig1,
+  struct EcdsaPartialSig_l sig2,
+  struct EcdsaPartialSig_l sig3
 );
 
 

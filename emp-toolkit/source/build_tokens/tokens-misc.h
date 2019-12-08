@@ -48,11 +48,11 @@ struct PayToken_d {
  * RIGHT NOW THIS THING IS 96 BITS.  WE MAY WANT TO INCREASE ITS LENGTH IN THE FUTURE!!!
  */
 struct Nonce_l {
-	uint32_t nonce[3];
+  uint32_t nonce[3];
 };
 
 struct Nonce_d {
-	Integer nonce[3];
+  Integer nonce[3];
 };
 
 /* state type
@@ -83,12 +83,13 @@ struct State_d {
 };
 
 /* Partial ECDSA signature
- * \param r     : A value for a partial ecdsa signature, k randomly chosen: (rx, ry) = kG, and r = rx*x mod q
- * \param k_inv : For the randomly chosen k, k_inv = k^-1
+ * This is a partial signature. It is based on a raondomly chosen k, message x, public key G, and public modulus q. Let (rx, ry) = kG.
+ * \param r     : r = rx*x mod q. Represented as a decimal string. (256 bits)
+ * \param k_inv : k_inv = k^-1. Represented as a decimal string. (256 bits)
  */
 struct EcdsaPartialSig_l {
-  uint32_t r[8];
-  uint32_t k_inv[8];
+  string r;
+  string k_inv;
 };
 
 struct EcdsaPartialSig_d {
@@ -138,12 +139,14 @@ EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d ecdsapartialsig);
  * \param r     : A value for a partial ecdsa signature, k randomly chosen: (rx, ry) = kG, and r = rx*x mod q
  * \param k_inv : For the randomly chosen k, k_inv = k^-1
  */
-struct PrivateEcdsaPartialSig {
-  Integer r;
-  Integer k_inv;
-};
+/*
+   struct PrivateEcdsaPartialSig {
+   Integer r;
+   Integer k_inv;
+   };
 
-PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub ); 
+   PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub ); 
+   */
 
 Integer makeInteger(bool *bits, int len, int intlen, int party);
 
@@ -153,20 +156,24 @@ Integer makeInteger(bool *bits, int len, int intlen, int party);
  * parent function; implements Protocol Pi_{ IssueTokens }
  * as described in bolt.pdf
  */
-void issue_tokens(EcdsaPartialSig sig1, 
-  bool close_tx_escrow[1024],
-  EcdsaPartialSig sig2, 
-  bool close_tx_merch[1024]
-  );
+void issue_tokens(struct EcdsaPartialSig_l sig1, 
+    bool close_tx_escrow[1024],
+    struct EcdsaPartialSig_l sig2, 
+    bool close_tx_merch[1024]
+    );
 
 /* SIGNATURE SCHEME
  * for the pay token. We haven't decided which one to use.
  * Also haven't finalized representation for tokens.
  */
 // void sign_token();
-PayToken sign_token(State state, HMACKey key);
+struct PayToken sign_token(struct State state, struct HMACKey key);
 // Bit verify_token_sig();
-Bit verify_token_sig(HMACKeyCommitment commitment, HMACKeyCommitmnetOpening opening, State oldState, PayToken paytoken);
+Bit verify_token_sig(
+  struct HMACKeyCommitment commitment, 
+  struct HMACKeyCommitmnetOpening opening, 
+  struct State oldState, 
+  struct PayToken paytoken);
 
 
 /* checks that the wallets are appropriately updated

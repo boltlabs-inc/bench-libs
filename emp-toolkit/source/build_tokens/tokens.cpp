@@ -10,9 +10,9 @@
 using namespace emp;
 
 // TODO: add fail bit and count up all the validations
-void issue_tokens(EcdsaPartialSig sig1, 
+void issue_tokens(EcdsaPartialSig_l sig1, 
   bool close_tx_escrow[1024],
-  EcdsaPartialSig sig2, 
+  EcdsaPartialSig_l sig2, 
   bool close_tx_merch[1024]
   ) {
   // check old pay token
@@ -76,7 +76,7 @@ void build_masked_tokens_cust(
   NetIO * io = new NetIO("127.0.0.1", port);
   setup_semi_honest(io, CUST);
 
-  EcdsaPartialSig dummy_sig;
+  EcdsaPartialSig_l dummy_sig;
 
   for (int i=0; i < 10; i+=2) {
     close_tx_escrow[1023-i] = true;
@@ -97,31 +97,21 @@ void build_masked_tokens_merch(
 
   bool close_mask[256],
   bool pay_mask[256],
-  EcdsaPartialSig sig1,
-  EcdsaPartialSig sig2,
-  EcdsaPartialSig sig3
+  EcdsaPartialSig_l sig1,
+  EcdsaPartialSig_l sig2,
+  EcdsaPartialSig_l sig3
 ) {
 
   // todo: replace new/delete with sweet auto
   NetIO * io = new NetIO(nullptr, port);
   setup_semi_honest(io, MERCH);
 
-  // hardcod test values
-  for (int i=0; i < 256; i++) {
-    sig1.r[i] = false;
-    sig1.k_inv[i] = false;
+  // hardcod test values 
+  sig1.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
+  sig1.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
 
-    sig2.r[i] = false;
-    sig2.k_inv[i] = false;
-  }
-  sig1.r[255] = true;
-  sig1.r[252] = true;
-  sig1.r[251] = true;
-
-  sig1.k_inv[255] = true;
-
-  sig2.r[245] = true;
-  sig2.k_inv[255] = true; 
+  sig2.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
+  sig2.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
 
   // define dummy (customer) inputs
   bool dummy_tx[1024];
@@ -141,6 +131,7 @@ Integer makeInteger(bool *bits, int len, int intlen, int party) {
   return Integer(intlen, bitstr, party);
 }
 
+/*
 PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub) { 
   PrivateEcdsaPartialSig priv;
   // probably should abstract this int initialization away
@@ -162,6 +153,7 @@ PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub) {
 
   return priv;
 }
+*/
 
 PayToken sign_token(State state, HMACKey key) {
   PayToken paytoken;
