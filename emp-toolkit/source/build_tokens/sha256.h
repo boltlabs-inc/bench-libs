@@ -76,3 +76,5 @@ void computeSHA256(uint message[BLOCKS][16], Integer result[8]);
  */
 void computeSHA256_d(Integer message[BLOCKS][16], Integer result[8]);
 
+void computeSHA256_d_3blocks(Integer message[3][16], Integer result[8]);
+

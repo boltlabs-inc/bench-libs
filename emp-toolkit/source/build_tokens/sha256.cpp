@@ -210,3 +210,80 @@ void computeSHA256_d(Integer message[BLOCKS][16], Integer result[8]) {
     result[i] = H[i];
   }
 }
+
+/* computes sha256 for a 2-block message
+ * output is stored in result
+ * composed of 8 32-bit Integers such that
+ * sha256(message) = result[0] || result[1] || ... || result[7]
+ */
+void computeSHA256_d_3blocks(Integer message[3][16], Integer result[8]) {
+
+  // initialize constants and initial hash digest value
+  Integer k[64];
+  Integer H[8];
+  Integer a,b,c,d,e,f,g,h;
+  Integer w[3][64];
+  // initialize message schedule
+  for (int i=0; i<3; i++) {
+    for(size_t t=0; t<16; t++) {
+      w[i][t] = message[i][t];
+    }
+  }
+
+  initSHA256(k, H);
+
+  for (int i=0; i<3; i++) {
+
+    // prepare message schedule
+
+    // 1. Prepare the message schedule, {Wt}
+    for(size_t t = 0 ; t <= 63 ; t++)
+    {
+      if( t<=15 ) {
+       // skip, we initialized this above 
+      }
+      else
+        // untested alert: maybe the message scheduling matrix is doing something weird 
+        // for multiple block inputs. Only tested for one block input.
+        w[i][t] = SIGMA_LOWER_1(w[i][t-2]) + w[i][t-7] + SIGMA_LOWER_0(w[i][t-15]) + w[i][t-16];
+    }
+
+    // 2. Initialize working variables
+    a = H[0];
+    b = H[1];
+    c = H[2];
+    d = H[3];
+    e = H[4];
+    f = H[5];
+    g = H[6];
+    h = H[7];
+
+    // 3. Compress: update working variables
+    for (int t=0; t < 64; t++) {
+      Integer temp1 = h + SIGMA_UPPER_1(e) + CH(e, f, g) + k[t] + w[i][t];
+      Integer temp2 = SIGMA_UPPER_0(a) + MAJ(a, b, c);
+      h = g;
+      g = f;
+      f = e;
+      e = d + temp1;
+      d = c;
+      c = b;
+      b = a;
+      a = temp1 + temp2;
+    }
+
+    // 4. Set new hash values
+    H[0] = H[0] + a;
+    H[1] = H[1] + b;
+    H[2] = H[2] + c;
+    H[3] = H[3] + d;
+    H[4] = H[4] + e;
+    H[5] = H[5] + f;
+    H[6] = H[6] + g;
+    H[7] = H[7] + h;
+  }
+
+  for(int i=0; i<8; i++) {
+    result[i] = H[i];
+  }
+}
