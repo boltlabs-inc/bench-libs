@@ -44,6 +44,22 @@ struct PayToken_d {
   Integer paytoken[8];
 };
 
+struct ClosingTokenMerch_l {
+  uint32_t token[8];
+};
+
+struct ClosingTokenMerch_d {
+  Integer token[8];
+};
+
+struct ClosingTokenEscrow_l {
+  uint32_t token[8];
+};
+
+struct ClosingTokenEscrow_d {
+  Integer token[8];
+};
+
 /* This is a nonce.  Its used to prevent double spends
  * RIGHT NOW THIS THING IS 96 BITS.  WE MAY WANT TO INCREASE ITS LENGTH IN THE FUTURE!!!
  */
@@ -90,6 +106,36 @@ struct State_d {
   Txid_d txid_escrow;
 };
 
+/* Commitment stuff
+ *
+ * Everything we are doing is a sha256 hash based commitment
+ */
+
+struct HMACKeyCommitment_l {
+  uint32_t commitment[8];
+};
+
+struct HMACKeyCommitment_d {
+  Integer commitment[8];
+};
+
+struct Mask_l {
+  uint32_t mask[8];
+};
+
+struct Mask_d {
+  Integer mask[8];
+};
+
+struct MaskCommitment_l {
+  uint32_t commitment[8];
+};
+
+struct MaskCommitment_d {
+  Integer commitment[8];
+};
+
+
 /* Partial ECDSA signature
  * This is a partial signature. It is based on a raondomly chosen k, message x, public key G, and public modulus q. Let (rx, ry) = kG.
  * \param r     : r = rx*x mod q. Represented as a decimal string. (256 bits)
@@ -125,6 +171,15 @@ Txid_l localize_Txid(Txid_d txid);
 
 State_d distribute_State(State_l state, int party);
 State_l localize_State(State_d state);
+
+HMACKeyCommitment_d distribute_HMACKeyCommitment(HMACKeyCommitment_l commitment, int party);
+HMACKeyCommitment_l localize_HMACKeyCommitment(HMACKeyCommitment_d commitment);
+
+MaskCommitment_d distribute_MaskCommitment(MaskCommitment_l commitment, int party);
+MaskCommitment_l localize_MaskCommitment(MaskCommitment_d commitment);
+
+Mask_d distribute_Mask(Mask_l mask, int party);
+Mask_l localize_Mask(Mask_d mask);
 
 EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l ecdsapartialsig, int party=MERCH);
 EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d ecdsapartialsig);
@@ -167,24 +222,28 @@ Integer makeInteger(bool *bits, int len, int intlen, int party);
  * parent function; implements Protocol Pi_{ IssueTokens }
  * as described in bolt.pdf
  */
-void issue_tokens(struct EcdsaPartialSig_l sig1, 
-    bool close_tx_escrow[1024],
-    struct EcdsaPartialSig_l sig2, 
-    bool close_tx_merch[1024]
-    );
+void issue_tokens(
+  State_l old_state_l,
+  State_l new_state_l,
+  HMACKeyCommitment_l hmac_key_commitment_l,
+  HMACKey_l hmac_key_l,
+  PayToken_l old_paytoken_l,
+  Mask_l paytoken_mask_l,
+  MaskCommitment_l paytoken_mask_commitment_l,
+  EcdsaPartialSig_l sig1, 
+  bool close_tx_escrow[1024],
+  EcdsaPartialSig_l sig2, 
+  bool close_tx_merch[1024]
+  );
 
 /* SIGNATURE SCHEME
  * for the pay token. We haven't decided which one to use.
  * Also haven't finalized representation for tokens.
  */
 // void sign_token();
-struct PayToken sign_token(struct State state, struct HMACKey key);
+PayToken_d sign_token(State_d state, HMACKey_d key);
 // Bit verify_token_sig();
-Bit verify_token_sig(
-  struct HMACKeyCommitment commitment, 
-  struct HMACKeyCommitmnetOpening opening, 
-  struct State oldState, 
-  struct PayToken paytoken);
+Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d old_state, PayToken_d old_paytoken);
 
 
 /* checks that the wallets are appropriately updated
@@ -231,14 +290,29 @@ Bit open_commitment();
  */
 Bit validate_transactions();
 
-/* applies a mask to a token
+/* applies a mask to a pay token
  * uses a one-time-pad scheme (just xors mask with token bits)
- *
+ * Also checks to make sure that the mask matches the commited to randomness
+ * 
  * updates the token in-line
  *
  * \param[in] mask 	: A random mask 
  * \param[in] token : Sequence of bits representing a token
  *
  */
-void mask_token();
+Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitment);
+
+/* applies a mask to a token
+ * uses a one-time-pad scheme (just xors mask with token bits)
+ * Also checks to make sure that the mask matches the commited to randomness
+ *
+ * updates the token in-line
+ *
+ * \param[in] mask  : A random mask 
+ * \param[in] token : Sequence of bits representing a token
+ *
+ */
+void mask_closemerchtoken(ClosingTokenMerch_d token, Mask_d mask, MaskCommitment_d maskcommitment);
+void mask_closeescrowtoken(ClosingTokenEscrow_d token, Mask_d mask, MaskCommitment_d maskcommitment);
+
 

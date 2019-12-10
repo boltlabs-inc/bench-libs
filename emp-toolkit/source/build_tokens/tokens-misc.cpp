@@ -1,11 +1,10 @@
 #include "emp-sh2pc/emp-sh2pc.h"
 #include "tokens-misc.h"
 
-
-
 HMACKey_d distribute_HMACKey(HMACKey_l key, int party) {
 
   HMACKey_d to_return;
+
   to_return.key[0] = Integer(32, key.key[0], party);
   to_return.key[1] = Integer(32, key.key[1], party);
   to_return.key[2] = Integer(32, key.key[2], party);
@@ -36,6 +35,7 @@ HMACKey_l localize_HMACKey(HMACKey_d key){
 RevLock_d distribute_RevLock(RevLock_l revlock, int party) {
 
   RevLock_d to_return;
+
   to_return.revlock[0] = Integer(32, revlock.revlock[0], party);
   to_return.revlock[1] = Integer(32, revlock.revlock[1], party);
   to_return.revlock[2] = Integer(32, revlock.revlock[2], party);
@@ -58,6 +58,7 @@ RevLock_l localize_RevLock(RevLock_d revlock){
 PayToken_d distribute_PayToken(PayToken_l paytoken, int party) {
 
   PayToken_d to_return;
+
   to_return.paytoken[0] = Integer(32, paytoken.paytoken[0], party);
   to_return.paytoken[1] = Integer(32, paytoken.paytoken[1], party);
   to_return.paytoken[2] = Integer(32, paytoken.paytoken[2], party);
@@ -80,6 +81,7 @@ PayToken_l localize_PayToken(PayToken_d paytoken){
 Nonce_d distribute_Nonce(Nonce_l nonce, int party)  {
 
   Nonce_d to_return;
+
   to_return.nonce[0] = Integer(32, nonce.nonce[0], party);
   to_return.nonce[1] = Integer(32, nonce.nonce[1], party);
   to_return.nonce[2] = Integer(32, nonce.nonce[2], party);
@@ -137,6 +139,79 @@ State_l localize_State(State_d state){
 
   return to_return;
 }
+
+HMACKeyCommitment_d distribute_HMACKeyCommitment(HMACKeyCommitment_l commitment, int party) {
+
+  HMACKeyCommitment_d to_return;
+
+  to_return.commitment[0] = Integer(32, commitment.commitment[0], party);
+  to_return.commitment[1] = Integer(32, commitment.commitment[1], party);
+  to_return.commitment[2] = Integer(32, commitment.commitment[2], party);
+  to_return.commitment[3] = Integer(32, commitment.commitment[3], party);
+  to_return.commitment[4] = Integer(32, commitment.commitment[4], party);
+  to_return.commitment[5] = Integer(32, commitment.commitment[5], party);
+  to_return.commitment[6] = Integer(32, commitment.commitment[6], party);
+  to_return.commitment[7] = Integer(32, commitment.commitment[7], party);
+
+  return to_return;  
+
+}
+
+HMACKeyCommitment_l localize_HMACKeyCommitment(HMACKeyCommitment_d commitment) {
+  HMACKeyCommitment_l to_return;
+  // GABE TODO
+
+  return to_return;
+}
+
+MaskCommitment_d distribute_MaskCommitment(MaskCommitment_l commitment, int party) {
+
+  MaskCommitment_d to_return;
+
+  to_return.commitment[0] = Integer(32, commitment.commitment[0], party);
+  to_return.commitment[1] = Integer(32, commitment.commitment[1], party);
+  to_return.commitment[2] = Integer(32, commitment.commitment[2], party);
+  to_return.commitment[3] = Integer(32, commitment.commitment[3], party);
+  to_return.commitment[4] = Integer(32, commitment.commitment[4], party);
+  to_return.commitment[5] = Integer(32, commitment.commitment[5], party);
+  to_return.commitment[6] = Integer(32, commitment.commitment[6], party);
+  to_return.commitment[7] = Integer(32, commitment.commitment[7], party);
+
+  return to_return;  
+
+}
+
+MaskCommitment_l localize_MaskCommitment(MaskCommitment_d commitment) {
+  MaskCommitment_l to_return;
+  // GABE TODO
+
+  return to_return;
+}
+
+
+Mask_d distribute_Mask(Mask_l mask, int party) {
+
+  Mask_d to_return;
+
+  to_return.mask[0] = Integer(32, mask.mask[0], party);
+  to_return.mask[1] = Integer(32, mask.mask[1], party);
+  to_return.mask[2] = Integer(32, mask.mask[2], party);
+  to_return.mask[3] = Integer(32, mask.mask[3], party);
+  to_return.mask[4] = Integer(32, mask.mask[4], party);
+  to_return.mask[5] = Integer(32, mask.mask[5], party);
+  to_return.mask[6] = Integer(32, mask.mask[6], party);
+  to_return.mask[7] = Integer(32, mask.mask[7], party);
+
+  return to_return;  
+}
+
+Mask_l localize_Mask(Mask_d mask) {
+  Mask_l to_return;
+  // GABE TODO
+
+  return to_return;
+}
+
 
 EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l psl, int party){
   EcdsaPartialSig_d to_return;

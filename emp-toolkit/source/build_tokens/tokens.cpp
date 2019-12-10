@@ -2,6 +2,7 @@
 #include "tokens-misc.h"
 #include "ecdsa.h"
 #include "hmac.h"
+#include "sha256.h"
 #include "emp-sh2pc/emp-sh2pc.h"
 
 #define MERCH ALICE
@@ -10,15 +11,33 @@
 using namespace emp;
 
 // TODO: add fail bit and count up all the validations
-void issue_tokens(EcdsaPartialSig_l sig1, 
+void issue_tokens(
+  State_l old_state_l,
+  State_l new_state_l,
+  HMACKeyCommitment_l hmac_key_commitment_l,
+  HMACKey_l hmac_key_l,
+  PayToken_l old_paytoken_l,
+  Mask_l paytoken_mask_l,
+  MaskCommitment_l paytoken_mask_commitment_l,
+  EcdsaPartialSig_l sig1, 
   bool close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
   bool close_tx_merch[1024]
   ) {
-  // check old pay token
-  // Bit b = verify_token_sig(commitment, opening, old_state, oldpaytoken);
 
-  // HMACKey key = commitment.key;
+  State_d old_state_d = distribute_State(old_state_l, CUST);
+  State_d new_state_d = distribute_State(new_state_l, CUST);
+
+  HMACKeyCommitment_d hmac_key_commitment_d = distribute_HMACKeyCommitment(hmac_key_commitment_l, PUBLIC);
+  HMACKey_d hmac_key_d = distribute_HMACKey(hmac_key_l, MERCH);
+
+  PayToken_d old_paytoken_d = distribute_PayToken(old_paytoken_l, CUST);
+
+  Mask_d paytoken_mask_d = distribute_Mask(paytoken_mask_l, MERCH);
+  MaskCommitment_d paytoken_mask_commitment_d = distribute_MaskCommitment(paytoken_mask_commitment_l, PUBLIC);
+
+  // check old pay token
+  Bit b = verify_token_sig(hmac_key_commitment_d, hmac_key_d, old_state_d, old_paytoken_d);
 
   // make sure wallets are well-formed
   compare_wallets();
@@ -35,12 +54,12 @@ void issue_tokens(EcdsaPartialSig_l sig1,
   //Integer signed_escrow_tx = ecdsa_sign(close_tx_merch, sig2);
 
   // sign new pay token
-  // PayToken newpaytoken = sign_token(state, key);
+  PayToken_d new_paytoken_d = sign_token(new_state_d, hmac_key_d);
 
   // mask pay and close tokens
-  mask_token(); // pay token
-  mask_token(); // close token - merchant close
-  mask_token(); // close token - escrow close
+  mask_paytoken(new_paytoken_d, paytoken_mask_d, paytoken_mask_commitment_d); // pay token // THIS MASK HAS LENGTH 256 bits
+  // mask_closemerchtoken(); // close token - merchant close 
+  // mask_closeescrowtoken(); // close token - escrow close 
 
   // ...return masked tokens
 }
@@ -82,7 +101,15 @@ void build_masked_tokens_cust(
     close_tx_escrow[1023-i] = true;
   }
 
-  issue_tokens(dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
+  State_l old_state_l;
+  State_l new_state_l;
+  HMACKeyCommitment_l hmac_key_commitment_l;
+  HMACKey_l hmac_key_l;
+  PayToken_l old_paytoken_l;
+  Mask_l paytoken_mask_l;
+  MaskCommitment_l paytoken_mask_commitment_l;
+
+  issue_tokens(old_state_l, new_state_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
 
   delete io;
 }
@@ -116,7 +143,15 @@ void build_masked_tokens_merch(
   // define dummy (customer) inputs
   bool dummy_tx[1024];
 
-  issue_tokens(sig1, dummy_tx, sig2, dummy_tx);
+  State_l old_state_l;
+  State_l new_state_l;
+  HMACKeyCommitment_l hmac_key_commitment_l;
+  HMACKey_l hmac_key_l;
+  PayToken_l old_paytoken_l;
+  Mask_l paytoken_mask_l;
+  MaskCommitment_l paytoken_mask_commitment_l;
+
+  issue_tokens(old_state_l, new_state_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
 
   delete io;
 }
@@ -155,62 +190,60 @@ PrivateEcdsaPartialSig setEcdsaPartialSig(EcdsaPartialSig pub) {
 }
 */
 
-PayToken sign_token(State state, HMACKey key) {
-  PayToken paytoken;
-  // HMACsign(key, state, paytoken);
+PayToken_d sign_token(State_d state, HMACKey_d key) {
+  PayToken_d paytoken;
+  HMACsign(key, state, paytoken.paytoken);
   return paytoken;
 }
 
-Bit verify_token_sig(HMACKeyCommitment commitment, HMACKeyCommitmnetOpening opening, State oldState, PayToken paytoken) {
+Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d old_state, PayToken_d old_paytoken) {
 
-  // // check that the opening is valid 
-  // int message[2][16];
+  // check that the opening is valid 
+  Integer message[2][16];
 
-  // for(int i=0; i<16; i++) {
-  //   message[0][i] = opening.key.key[i];
-  // }
+  for(int i=0; i<16; i++) {
+    message[0][i] = opening.key[i];
+  }
 
-  // // Padding
-  // message[1][0] = 0x80000000;
-  // message[1][1] = 0x00000000;
-  // message[1][2] = 0x00000000;
-  // message[1][3] = 0x00000000;
-  // message[1][4] = 0x00000000;
-  // message[1][5] = 0x00000000;
-  // message[1][6] = 0x00000000;
-  // message[1][7] = 0x00000000;
-  // message[1][8] = 0x00000000;
-  // message[1][9] = 0x00000000;
-  // message[1][10] = 0x00000000;
-  // message[1][11] = 0x00000000;
-  // message[1][12] = 0x00000000;
-  // message[1][13] = 0x00000000;
+  // Padding
+  message[1][0] = Integer(32, -2147483648, PUBLIC); //0x80000000;
+  message[1][1] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][2] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][3] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][4] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][5] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][6] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][7] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][8] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][9] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][10] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][11] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][12] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][13] = Integer(32, 0, PUBLIC); //0x00000000;
 
-  // // Message length
-  // message[1][14] = 0x00000000;
-  // message[1][15] = 0x00000200;
+  // Message length 
+  message[1][14] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][15] = Integer(32, 512, PUBLIC);
 
-  // Integer hashresult[8];
+  Integer hashresult[8];
 
-  // computeSHA256(message, hashresult);
+  computeSHA256_d(message, hashresult);
 
   Bit b; // TODO initialize to 0
 
-  // for(int i=0; i<8; i++) {
-  //   if(commitment.commitment[i] != hashresult[i]) {
-  //     b = 1;
-  //   }
-  // }
+  for(int i=0; i<8; i++) {
+     Bit not_equal = !(commitment.commitment[i].equal(hashresult[i]));
+     b = b | not_equal;
+  }
 
   // // Sign the old state again to compare
-  // PayToken recomputed_paytoken;
-  // HMACsign(opening.key.key, oldState, recomputed_paytoken);
+  PayToken_d recomputed_paytoken;
+  HMACsign(opening, old_state, recomputed_paytoken.paytoken);
 
-  // for(int i=0; i<8; i++) {
-  //   if(recomputed_paytoken.paytoken[i] != paytoken.paytoken[i]) {
-  //     b = 1;
-  //   }
-  // }
+  for(int i=0; i<8; i++) {
+    Bit not_equal = !(recomputed_paytoken.paytoken[i].equal(old_paytoken.paytoken[i]));
+    b = b | not_equal;
+  }
   return b;
 }
 
@@ -233,6 +266,48 @@ Bit validate_transactions() {
 }
 
 // mask pay and close tokens
-void mask_token() {
+Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitment) {
+
+  // The pay token is 256 bits long.
+  // Thus the mask is 256 bits long.
+  // First we check to see if the mask was correct
+  // TODO RETURN A BIT
+
+  // TODO CHANGE TO 1
+  Integer message[2][16];
+
+  for(int i=0; i<8; i++) {
+    message[0][i] = paytoken.paytoken[i];
+  }
+
+  message[1][8] = Integer(32, -2147483648, PUBLIC); //0x80000000;
+  message[1][9] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][10] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][11] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][12] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][13] = Integer(32, 0, PUBLIC); //0x00000000;
+
+  // Message length 
+  message[1][14] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[1][15] = Integer(32, 256, PUBLIC);
+
+  Integer hashresult[8];
+
+  computeSHA256_d(message, hashresult);
+
+  Bit b;  // TODO initialize to 0
+
+  for(int i=0; i<8; i++) {
+     Bit not_equal = !(maskcommitment.commitment[i].equal(hashresult[i]));
+     b = b | not_equal;
+  }
+  return b;
+}
+
+//TODO
+void mask_closemerchtoken(ClosingTokenMerch_d token, Mask_d mask, MaskCommitment_d maskcommitment) {
+
+}
+void mask_closeescrowtoken(ClosingTokenEscrow_d token, Mask_d mask, MaskCommitment_d maskcommitment){
 
 }
