@@ -9,7 +9,7 @@ using namespace std;
 /* This function executes the inner hash of the HMAC algorithm
  * The resulting hash is returned in innerhashresult
  * We are computing SHA256(  ( key ^ ipad ) || state )
- * This requires 3 SHA256 rouns (state is ~928 bits and key^ipad is 512bits)
+ * This requires 3 SHA256 rounds (state is ~928 bits and key^ipad is 512bits)
  */
 void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
 
@@ -69,10 +69,10 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
   message[2][12] = state.txid_escrow.txid[7];
 
   // a single 1 bit, followed by 0's
-  // 64 bit big-endian representation of 928
+  // 64 bit big-endian representation of 1440
   message[2][13] = Integer(32, -2147483648, PUBLIC); //0x80000000;
   message[2][14] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[2][15] = Integer(32, 928, PUBLIC); //0x000003a0;
+  message[2][15] = Integer(32, 1440, PUBLIC); //0x000003a0;
 
   computeSHA256_d_3blocks(message, innerhashresult);
 }
@@ -85,7 +85,6 @@ void outerhash(HMACKey_d key, Integer innerhashresult[8], Integer outerhashresul
 
   // Preparing the buffer for the hash input
   Integer opad(32, 1549556828, PUBLIC);
-
 
   Integer message[2][16];
 
@@ -100,7 +99,8 @@ void outerhash(HMACKey_d key, Integer innerhashresult[8], Integer outerhashresul
   }
   
   //padding and length bits
-  message[1][9]  = Integer(32, -2147483648, PUBLIC); //= 0x80000000;
+  message[1][8]  = Integer(32, -2147483648, PUBLIC); //= 0x80000000;
+  message[1][9]  = Integer(32, 0, PUBLIC); //0x00000000;
   message[1][10] = Integer(32, 0, PUBLIC); //0x00000000;
   message[1][11] = Integer(32, 0, PUBLIC); //0x00000000;
   message[1][12] = Integer(32, 0, PUBLIC); //0x00000000; 
@@ -115,11 +115,11 @@ void outerhash(HMACKey_d key, Integer innerhashresult[8], Integer outerhashresul
 } 
   
   
-void HMACsign(HMACKey_d merch_key, State_d state, PayToken_d paytoken) {
+void HMACsign(HMACKey_d merch_key, State_d state, Integer paytoken[8]) {
   
   Integer innerhashresult[8];
   
   innerhash(merch_key, state, innerhashresult);
   
-  outerhash(merch_key, innerhashresult, paytoken.paytoken);
-} 
+  outerhash(merch_key, innerhashresult, paytoken);
+}

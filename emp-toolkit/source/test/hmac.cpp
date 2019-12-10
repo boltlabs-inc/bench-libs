@@ -24,7 +24,7 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 
 string reference_HMAC_sign(CryptoPP::SecByteBlock key, string msg);
-string run_secure_HMACsign(uint8_t key[64], string msg);
+string run_secure_HMACsign(string key, string msg);
 string test_output(Integer result[8]);
 
 // this is not actually random because I don't seed rand().
@@ -69,8 +69,6 @@ HMAC-SHA256(/tmp/msg)= af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b78
 // The msgs we are signing are 116 bytes long, or 29 ints long
 void test_end_to_end() {
 
-  // AutoSeededRandomPool prng;
-
   uint8_t test_key_bytes[64] = 
     { 0x76, 0x6f, 0x6e, 0x6a, 0x75, 0x71, 0x66, 0x62, 
       0x6c, 0x6a, 0x74, 0x75, 0x61, 0x76, 0x74, 0x61, 
@@ -81,12 +79,13 @@ void test_end_to_end() {
       0x66, 0x63, 0x71, 0x79, 0x6e, 0x7a, 0x75, 0x6c, 
       0x7a, 0x63, 0x73, 0x75, 0x74, 0x6f, 0x68, 0x6d };
 
+  string test_key = "vonjuqfbljtuavtaonlpfxnfvzlyvqchmgsilrituxsofgrcfcqynzulzcsutohm";
+
   CryptoPP::SecByteBlock key(test_key_bytes, 64);
-  // prng.GenerateBlock(key, key.size());
 
   string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkz";
   string expected = reference_HMAC_sign(key, msg);
-  string actual = run_secure_HMACsign(test_key_bytes, msg);
+  string actual = run_secure_HMACsign(test_key, msg);
 
   boost::algorithm::to_lower(expected);
   boost::algorithm::to_lower(actual);
@@ -100,7 +99,7 @@ void test_end_to_end() {
     // TODO GENERATE RANDOM KEYS
     msg = gen_random(116);
     string expected = reference_HMAC_sign(key, msg);
-    string actual = run_secure_HMACsign(test_key_bytes, msg);
+    string actual = run_secure_HMACsign(test_key, msg);
 
     boost::algorithm::to_lower(expected);
     boost::algorithm::to_lower(actual);
@@ -109,10 +108,10 @@ void test_end_to_end() {
 
   }
   
-  cout << "Passed 64 SHA256 end-to-end tests." << endl;
+  cout << "Passed 64 HMAC end-to-end tests." << endl;
 }
 
-// reference sha256 implementation by CryptoPP
+// reference HMAC implementation by CryptoPP
 string reference_HMAC_sign(CryptoPP::SecByteBlock key, string msg) {
 
   string mac;
@@ -130,35 +129,78 @@ string reference_HMAC_sign(CryptoPP::SecByteBlock key, string msg) {
       cerr << e.what() << endl;
       exit(1);
   }
-  return mac;
+  
+  string encoded;
+
+  encoded.clear();
+  CryptoPP::StringSource ss3(mac, true,
+    new CryptoPP::HexEncoder(
+        new CryptoPP::StringSink(encoded)
+    ) // HexEncoder
+  ); // StringSource
+
+  return encoded;
 }
 
 
 // test hmac implementation 
-string run_secure_HMACsign(uint8_t key[64], string msg) {
+string run_secure_HMACsign(string key, string msg) {
 
   //TODO A LOT OF THIS IS WRONG 
+  string hex_key;
+
+  CryptoPP::StringSource foo(key, true,
+      new CryptoPP::HexEncoder (
+        new CryptoPP::StringSink(hex_key)));
+
+   string hex_msg;
+
+  CryptoPP::StringSource bar(msg, true,
+      new CryptoPP::HexEncoder (
+        new CryptoPP::StringSink(hex_msg)));
+
+  string temp;
+
   HMACKey_l merch_key_l;
-  memcpy(merch_key_l.key, msg.c_str(), 64);
+
+  for(int i =0; i<16; i++) {
+    temp = hex_key.substr(i*8, 8);
+    merch_key_l.key[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
+
   State_l state_l;
-  memcpy(state_l.nonce.nonce, msg.c_str(), sizeof(Nonce_l));
-  memcpy(state_l.rl.revlock, msg.c_str() + sizeof(Nonce_l), sizeof(RevLock_l));
-  memcpy(&(state_l.balance_cust), msg.c_str() + sizeof(Nonce_l) + sizeof(RevLock_l), sizeof(uint32_t));
-  memcpy(&(state_l.balance_merch), 
-    msg.c_str() + sizeof(Nonce_l) + sizeof(RevLock_l) + sizeof(uint32_t), 
-      sizeof(uint32_t));
-  memcpy(state_l.txid_merch.txid, 
-    msg.c_str() + sizeof(Nonce_l) + sizeof(RevLock_l) + sizeof(uint32_t) + sizeof(uint32_t),
-      sizeof(Txid_l));
-  memcpy(state_l.txid_escrow.txid, msg.c_str() 
-    + sizeof(Nonce_l) + sizeof(RevLock_l) + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(Txid_l),
-      sizeof(Txid_l));
+
+  for(int i=0; i<3; i++) {
+    temp = hex_msg.substr(i*8, 8);
+    state_l.nonce.nonce[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
+
+  for(int i=0; i<8; i++) {
+    temp = hex_msg.substr((i+3)*8, 8);
+    state_l.rl.revlock[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
+
+  temp = hex_msg.substr((11)*8, 8);
+  state_l.balance_cust = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+
+  temp = hex_msg.substr((12)*8, 8);
+  state_l.balance_merch = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+
+  for(int i=0; i<8; i++) {
+    temp = hex_msg.substr((i+13)*8, 8);
+    state_l.txid_merch.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
+
+  for(int i=0; i<8; i++) {
+    temp = hex_msg.substr((i+21)*8, 8);
+    state_l.txid_escrow.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  } 
 
   // MPC - run hmac 
   PayToken_d paytoken_d;
   HMACKey_d merch_key_d = distribute_HMACKey(merch_key_l, MERCH);
   State_d state_d = distribute_State(state_l, CUST);
-  HMACsign(merch_key_d, state_d, paytoken_d);
+  HMACsign(merch_key_d, state_d, paytoken_d.paytoken);
 
   Integer hash = composeSHA256result(paytoken_d.paytoken);
   string res = hash.reveal_unsigned(PUBLIC,16);
