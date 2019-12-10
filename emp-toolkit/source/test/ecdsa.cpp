@@ -24,10 +24,11 @@ using namespace std;
 #define byte unsigned char
 namespace ASN1 = CryptoPP::ASN1;
 
-void validate_signature(string secret, string msg, string sig) {
+bool validate_signature(string secret, string msg, string sig) {
   CryptoPP::AutoSeededRandomPool prng;
   CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::PrivateKey privkey;
 
+  // parse secret into private key
   CryptoPP::HexDecoder decoder;
   decoder.Put((byte *)&secret[0], secret.size());
   decoder.MessageEnd();
@@ -39,17 +40,19 @@ void validate_signature(string secret, string msg, string sig) {
   bool result = privkey.Validate(prng, 3);
   if (!result) {
     cout << "bad private key" << endl;
-    return;
+    return result;
   }
 
+  // generate corresponding public key
   CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::PublicKey pubkey;
   privkey.MakePublicKey(pubkey);
   result = pubkey.Validate(prng, 3);
   if (!result) {
     cout << "bad public key" << endl;
-    return;
+    return result;
   }
 
+  // apply signature verification to message + signature
   // TODO: fails because this msg is already hashed. We need the original for this to validate properly.
   CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>::Verifier verifier( pubkey );
   CryptoPP::StringSource ss(sig + msg, true,
@@ -58,65 +61,52 @@ void validate_signature(string secret, string msg, string sig) {
       new CryptoPP::ArraySink( (byte*)&result, sizeof(result) )));
 
   if (!result) {
-    cout << "bad signature" << endl;
-    return;
+    // cout << "bad signature" << endl;
+    return result;
   }
 
   cout << "everything ok" << endl;
-  
-
-
-
-
+  return true;
 }
 
-void test_vectors_from_file() {
-  // read from file
-  string secret = "0f3d6322ea090bcae3d548bd866ed18162c391e865c3556d52d4eb9416d0cb08";
-  string msg = "c74a413f949209218a62b4b20726a8c2d222c2f0b0e51858c25aa3e8cf1a52f3";
-  string sig = "1808a755daa0c01ef8d5be1b811af30061782983688489ab0613a00aaaa7db617f80f9c507d8cb848adbbeb3de3a8e3375f2f12d0c1a468153b48c17cfd7f978";
-  string r = "7913485180834049136650668178914227957561066370461353605956886480359654810771";
-  string k_inv = "111493547342612901036345801958286580672694014433743061827635735207193071264317";
 
+void test_hardcoded_vector() {
+  // TODO: read from file
+  string secret = "eaf987c1c4c075c9bcd9f6c9cc0f6628f3b96dec433363992ad4b3347e5669f3";
+  string hashedmsg = "469457f5921cb642d5df1854342507b3c0df6c8f5b352fc85de05ac0a5cb26c8";
+  string sig = "4df58e74231e5ba8fee4d34ad79a0a4652400dcf2662f0801d588f8cff214bb36e18b5ddc827927164eec163096f7f4f7c6f55e2a8308bb75eb7808aabea9332";
+  string r = "26463205901945641209230855182233034246646264939878964221079776711177665272924";
+  string k_inv = "36979145525970282406643140119499976117570447117404397467172974627410940786338";
 
-  secret = "2c18aec8b85af7699420c0231c9aafad1c0479fef21c3e89156eee834d8272c7";
-  msg = "f7cef157ecd82e3b303ed0efb04b7c03a906e2575ba4f3631d28a75318bfc0bf";
-  sig = "0d60660d1cca84ad7846aa715512b8d73b88ad2b11f1edc3ee552d645421d3c317654ec947aa7807b06adb554d160a0daa701c98fef9641a04a975ee0193576b";
-  r = "6050388681439922606531770736235994049418759587930168486780873242865549038531";
-  k_inv = "115439820451179298612727241820335060148401902339560995563654340803756537405725";
+  // make sure rust-generated signature is correct
+  bool result = validate_signature(secret, hashedmsg, sig);
+  if (!result) {
+    //cout << "signature validation failed" << endl;
+  }
 
-  validate_signature(secret, msg, sig);
+  // format message correctly
+  hashedmsg = change_base(hashedmsg, 16, 10);
+  Integer e(256, hashedmsg, PUBLIC);
   
-  cout << change_base(r,10,16) << endl;;
-
-
-  /*
-  msg = "68b0424486651f78748e31f2e0ac30bc3a8e8a3ebebf492244b129a5d95bba8e";
-  sig = "6b9a32e3c12d4606c9426dfed4db2705f6de26a4a6705a86cec9f4dc2f46f48d44eb31aa0ca42693ea750ae28e5c57077c16e658ad402d94ca105d14e28600be";
-  r = "48669920473954504460648095582690834937933402865433997809507510532130143138957";
-  k_inv = "78806992654404740588773615297361166733554192253349232660443284396762193121119";
-  */
-
-  msg = change_base(msg, 16, 10);
-  Integer e(256, msg, PUBLIC);
-  
+  // format partial signature
   EcdsaPartialSig_l psl;
   psl.r = r;
   psl.k_inv = k_inv;
   EcdsaPartialSig_d psd = distribute_EcdsaPartialSig(psl);
 
-  Integer result = sign_hashed_msg(e, psd);
-  string actual = result.reveal_unsigned(PUBLIC);
+  // compute and parse result
+  string actual = sign_hashed_msg(e, psd).reveal_unsigned(PUBLIC);
   actual = change_base(actual, 10, 16);
+  while (actual.length() < 64) {
+    actual = '0' + actual;
+  }
 
+  // parse expected result
   string expected = sig.substr(64);
-  cout << "len: " << expected.length() << endl;
 
-  cout << "actual   : " << actual << endl;
-  cout << "expected : " << expected << endl;
+  assert ( actual.compare(expected) == 0 );
 
-  cout << "failed one test" << endl;
-  
+  cout << "passed one test" << endl;
 }
 
 
@@ -133,7 +123,7 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  test_vectors_from_file();
+  test_hardcoded_vector();
 
   delete io;
   return 0;
