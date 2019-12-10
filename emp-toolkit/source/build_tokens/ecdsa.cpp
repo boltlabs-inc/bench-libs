@@ -84,7 +84,7 @@ Integer sign_hashed_msg(Integer e, EcdsaPartialSig_d partialsig) {
   s = partialsig.k_inv * s;
   s = s % q;
 
-  //s.resize(256,true);
+  s.resize(256,true);
 
   //cout << "i. signature is " << s.reveal<string>(PUBLIC) << endl;
   return s;
