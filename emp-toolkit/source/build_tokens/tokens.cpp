@@ -14,6 +14,7 @@ using namespace emp;
 void issue_tokens(
   State_l old_state_l,
   State_l new_state_l,
+  int32_t epsilon_l,
   HMACKeyCommitment_l hmac_key_commitment_l,
   HMACKey_l hmac_key_l,
   PayToken_l old_paytoken_l,
@@ -28,6 +29,8 @@ void issue_tokens(
   State_d old_state_d = distribute_State(old_state_l, CUST);
   State_d new_state_d = distribute_State(new_state_l, CUST);
 
+  Integer epsilon_d(32, epsilon_l, PUBLIC);
+
   HMACKeyCommitment_d hmac_key_commitment_d = distribute_HMACKeyCommitment(hmac_key_commitment_l, PUBLIC);
   HMACKey_d hmac_key_d = distribute_HMACKey(hmac_key_l, MERCH);
 
@@ -40,7 +43,7 @@ void issue_tokens(
   Bit b = verify_token_sig(hmac_key_commitment_d, hmac_key_d, old_state_d, old_paytoken_d);
 
   // make sure wallets are well-formed
-  compare_wallets();
+  b = (b | compare_wallets(old_state_d, new_state_d, epsilon_d));
   
   // todo: remove this
   // make sure customer committed to this new wallet
@@ -57,7 +60,7 @@ void issue_tokens(
   PayToken_d new_paytoken_d = sign_token(new_state_d, hmac_key_d);
 
   // mask pay and close tokens
-  mask_paytoken(new_paytoken_d, paytoken_mask_d, paytoken_mask_commitment_d); // pay token // THIS MASK HAS LENGTH 256 bits
+  b = (b|mask_paytoken(new_paytoken_d, paytoken_mask_d, paytoken_mask_commitment_d)); // pay token 
   // mask_closemerchtoken(); // close token - merchant close 
   // mask_closeescrowtoken(); // close token - escrow close 
 
@@ -103,13 +106,14 @@ void build_masked_tokens_cust(
 
   State_l old_state_l;
   State_l new_state_l;
+  uint32_t epsilon_l = 0;
   HMACKeyCommitment_l hmac_key_commitment_l;
   HMACKey_l hmac_key_l;
   PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
 
-  issue_tokens(old_state_l, new_state_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
+  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
 
   delete io;
 }
@@ -145,13 +149,14 @@ void build_masked_tokens_merch(
 
   State_l old_state_l;
   State_l new_state_l;
+  uint32_t epsilon_l = 0;
   HMACKeyCommitment_l hmac_key_commitment_l;
   HMACKey_l hmac_key_l;
   PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
 
-  issue_tokens(old_state_l, new_state_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
+  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
 
   delete io;
 }
@@ -248,8 +253,24 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
 }
 
 // make sure wallets are well-formed
-Bit compare_wallets() {
-  Bit b;
+Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d) {
+
+  //Make sure the fields are all correct
+  Bit b; // TODO initialize to 0
+
+  for(int i=0; i<8; i++) {
+     Bit not_equal = !(old_state_d.txid_merch.txid[i].equal(new_state_d.txid_merch.txid[i]));
+     b = b | not_equal;
+  }
+
+  for(int i=0; i<8; i++) {
+     Bit not_equal = !(old_state_d.txid_escrow.txid[i].equal(new_state_d.txid_escrow.txid[i]));
+     b = b | not_equal;
+  }
+
+  b = (b | new_state_d.balance_merch.equal(old_state_d.balance_merch + epsilon_d));
+  b = (b | new_state_d.balance_cust.equal(old_state_d.balance_cust - epsilon_d));
+
   return b;
 }
 

@@ -225,6 +225,7 @@ Integer makeInteger(bool *bits, int len, int intlen, int party);
 void issue_tokens(
   State_l old_state_l,
   State_l new_state_l,
+  int32_t epsilon_l,
   HMACKeyCommitment_l hmac_key_commitment_l,
   HMACKey_l hmac_key_l,
   PayToken_l old_paytoken_l,
@@ -247,7 +248,7 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
 
 
 /* checks that the wallets are appropriately updated
- * 0. old wallet ID matches publicly revealed wkpi
+ * 0. old wallet ID matches publicly revealed wkpi --> TODO??
  * 1. wallet customer keys match
  * 2. escrow transactions match
  * 3. merchant-close transactions match
@@ -260,7 +261,7 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
  *
  * \return b 	: success bit
  */
-Bit compare_wallets();
+Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d);
 
 /* opens and verifies commitment to a wallet
  * e.g. checks that com == commit(w;t)
