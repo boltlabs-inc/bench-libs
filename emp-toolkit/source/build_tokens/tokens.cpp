@@ -20,6 +20,10 @@ void issue_tokens(
   PayToken_l old_paytoken_l,
   Mask_l paytoken_mask_l,
   MaskCommitment_l paytoken_mask_commitment_l,
+  Mask_l merch_mask_l,
+  MaskCommitment_l merch_mask_commitment_l,
+  Mask_l escrow_mask_l,
+  MaskCommitment_l escrow_mask_commitment_l,
   EcdsaPartialSig_l sig1, 
   bool close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
@@ -39,6 +43,12 @@ void issue_tokens(
   Mask_d paytoken_mask_d = distribute_Mask(paytoken_mask_l, MERCH);
   MaskCommitment_d paytoken_mask_commitment_d = distribute_MaskCommitment(paytoken_mask_commitment_l, PUBLIC);
 
+  Mask_d merch_mask_d = distribute_Mask(merch_mask_l, MERCH);
+  MaskCommitment_d merch_mask_commitment_d = distribute_MaskCommitment(merch_mask_commitment_l, PUBLIC);
+
+  Mask_d escrow_mask_d = distribute_Mask(escrow_mask_l, MERCH);
+  MaskCommitment_d escrow_mask_commitment_d = distribute_MaskCommitment(escrow_mask_commitment_l, PUBLIC);
+
   // check old pay token
   Bit b = verify_token_sig(hmac_key_commitment_d, hmac_key_d, old_state_d, old_paytoken_d);
 
@@ -47,10 +57,11 @@ void issue_tokens(
   
   // todo: remove this
   // make sure customer committed to this new wallet
-  open_commitment();
+  TxSerialized_d close_tx_escrow_d;
+  TxSerialized_d close_tx_merch_d;
 
   // make sure new close transactions are well-formed
-  validate_transactions();
+  b = (b | validate_transactions(new_state_d, close_tx_escrow_d, close_tx_merch_d));
 
   // sign new close transactions 
   Integer signed_merch_tx = ecdsa_sign(close_tx_escrow, sig1);
@@ -59,12 +70,18 @@ void issue_tokens(
   // sign new pay token
   PayToken_d new_paytoken_d = sign_token(new_state_d, hmac_key_d);
 
+  // Transform the signed_merch_tx into the correct format --> array of 8 32bit uints
+  Integer signed_merch_tx_parsed[8];
+  Integer signed_escrow_tx_parsed[8];
+
   // mask pay and close tokens
-  b = (b|mask_paytoken(new_paytoken_d, paytoken_mask_d, paytoken_mask_commitment_d)); // pay token 
-  // mask_closemerchtoken(); // close token - merchant close 
-  // mask_closeescrowtoken(); // close token - escrow close 
+  b = ( b | mask_paytoken(new_paytoken_d.paytoken, paytoken_mask_d, paytoken_mask_commitment_d)); // pay token 
+  b = ( b | mask_closemerchtoken(signed_merch_tx_parsed, merch_mask_d, merch_mask_commitment_d)); // close token - merchant close 
+  b = ( b | mask_closeescrowtoken(signed_escrow_tx_parsed, escrow_mask_d, escrow_mask_commitment_d)); // close token - escrow close 
 
   // ...return masked tokens
+  // If b = 1, we need to return nothing of value.  Otherwise we need to return all 1's or something.
+  //   we can do this by or-ing b into everything!
 }
 
 /* customer's token generation function
@@ -112,8 +129,12 @@ void build_masked_tokens_cust(
   PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
+  Mask_l merch_mask_l;
+  MaskCommitment_l merch_mask_commitment_l;
+  Mask_l escrow_mask_l;
+  MaskCommitment_l escrow_mask_commitment_l;
 
-  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
+  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
 
   delete io;
 }
@@ -155,8 +176,12 @@ void build_masked_tokens_merch(
   PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
+  Mask_l merch_mask_l;
+  MaskCommitment_l merch_mask_commitment_l;
+  Mask_l escrow_mask_l;
+  MaskCommitment_l escrow_mask_commitment_l;
 
-  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
+  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
 
   delete io;
 }
@@ -280,25 +305,13 @@ Bit open_commitment() {
   return b;
 }
 
-// make sure new close transactions are well-formed
-Bit validate_transactions() {
-  Bit b;
-  return b;
-}
+Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
+  Bit b;  // TODO initialize to 0
 
-// mask pay and close tokens
-Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitment) {
-
-  // The pay token is 256 bits long.
-  // Thus the mask is 256 bits long.
-  // First we check to see if the mask was correct
-  // TODO RETURN A BIT
-
-  // TODO CHANGE TO 1
-  Integer message[2][16];
+  Integer message[1][16];
 
   for(int i=0; i<8; i++) {
-    message[0][i] = paytoken.paytoken[i];
+    message[0][i] = mask.mask[i];
   }
 
   message[1][8] = Integer(32, -2147483648, PUBLIC); //0x80000000;
@@ -314,9 +327,7 @@ Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitm
 
   Integer hashresult[8];
 
-  computeSHA256_d(message, hashresult);
-
-  Bit b;  // TODO initialize to 0
+  computeSHA256_d_1blocks(message, hashresult);
 
   for(int i=0; i<8; i++) {
      Bit not_equal = !(maskcommitment.commitment[i].equal(hashresult[i]));
@@ -325,10 +336,66 @@ Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitm
   return b;
 }
 
-//TODO
-void mask_closemerchtoken(ClosingTokenMerch_d token, Mask_d mask, MaskCommitment_d maskcommitment) {
+// make sure new close transactions are well-formed
+Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d) {
+  Bit b;
 
+/* validates closing transactions against a wallet
+ * for each transaction:
+ * 0. check that balances are correct
+ * 1. check that wallet key is integrated correctly
+ * 2. check that source is correct
+ *    for close_tx_merch, source is txid_merch
+ *    for close_tx_escrow, source is txid_escrow
+ *
+ * \return b  : success bit
+ */
+
+  return b;
 }
-void mask_closeescrowtoken(ClosingTokenEscrow_d token, Mask_d mask, MaskCommitment_d maskcommitment){
 
+// mask pay and close tokens
+Bit mask_paytoken(Integer paytoken[8], Mask_d mask, MaskCommitment_d maskcommitment) {
+
+  // The pay token is 256 bits long.
+  // Thus the mask is 256 bits long.
+  // First we check to see if the mask was correct
+
+  Bit b = verify_mask_commitment(mask, maskcommitment);
+
+  for(int i=0; i<8; i++) {
+    paytoken[i] = paytoken[i] ^ mask.mask[i];
+  }
+
+  return b;
+}
+
+Bit mask_closemerchtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment) {
+
+  // The pay token is 256 bits long.
+  // Thus the mask is 256 bits long.
+  // First we check to see if the mask was correct
+  
+  Bit b = verify_mask_commitment(mask, maskcommitment);
+
+  for(int i=0; i<8; i++) {
+    token[i] = token[i] ^ mask.mask[i];
+  }
+
+  return b;
+}
+
+Bit mask_closeescrowtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment){
+
+  // The pay token is 256 bits long.
+  // Thus the mask is 256 bits long.
+  // First we check to see if the mask was correct
+  
+  Bit b = verify_mask_commitment(mask, maskcommitment);
+
+  for(int i=0; i<8; i++) {
+    token[i] = token[i] ^ mask.mask[i];
+  }
+
+  return b;
 }

@@ -71,6 +71,14 @@ struct Nonce_d {
   Integer nonce[3];
 };
 
+struct TxSerialized_l {
+  uint32_t tx[32];
+};
+
+struct TxSerialized_d {
+  Integer tx[32];
+};
+
 struct Txid_l {
   uint32_t txid[8];
 };
@@ -231,6 +239,10 @@ void issue_tokens(
   PayToken_l old_paytoken_l,
   Mask_l paytoken_mask_l,
   MaskCommitment_l paytoken_mask_commitment_l,
+  Mask_l merch_mask_l,
+  MaskCommitment_l merch_mask_commitment_l,
+  Mask_l escrow_mask_l,
+  MaskCommitment_l escrow_mask_commitment_l,
   EcdsaPartialSig_l sig1, 
   bool close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
@@ -275,6 +287,10 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d)
  */
 Bit open_commitment();
 
+
+Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment);
+
+
 /* validates closing transactions against a wallet
  * for each transaction:
  * 0. check that balances are correct
@@ -289,7 +305,7 @@ Bit open_commitment();
  *
  * \return b 	: success bit
  */
-Bit validate_transactions();
+Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d);
 
 /* applies a mask to a pay token
  * uses a one-time-pad scheme (just xors mask with token bits)
@@ -301,7 +317,7 @@ Bit validate_transactions();
  * \param[in] token : Sequence of bits representing a token
  *
  */
-Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitment);
+Bit mask_paytoken(Integer paytoken[8], Mask_d mask, MaskCommitment_d maskcommitment);
 
 /* applies a mask to a token
  * uses a one-time-pad scheme (just xors mask with token bits)
@@ -313,7 +329,7 @@ Bit mask_paytoken(PayToken_d paytoken, Mask_d mask, MaskCommitment_d maskcommitm
  * \param[in] token : Sequence of bits representing a token
  *
  */
-void mask_closemerchtoken(ClosingTokenMerch_d token, Mask_d mask, MaskCommitment_d maskcommitment);
-void mask_closeescrowtoken(ClosingTokenEscrow_d token, Mask_d mask, MaskCommitment_d maskcommitment);
+Bit mask_closemerchtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment);
+Bit mask_closeescrowtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment);
 
 
