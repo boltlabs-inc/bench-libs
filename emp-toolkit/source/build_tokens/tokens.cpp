@@ -314,19 +314,19 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
     message[0][i] = mask.mask[i];
   }
 
-  message[1][8] = Integer(32, -2147483648, PUBLIC); //0x80000000;
-  message[1][9] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[1][10] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[1][11] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[1][12] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[1][13] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][8] = Integer(32, -2147483648, PUBLIC); //0x80000000;
+  message[0][9] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][10] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][11] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][12] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][13] = Integer(32, 0, PUBLIC); //0x00000000;
 
   // Message length 
-  message[1][14] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[1][15] = Integer(32, 256, PUBLIC);
+  message[0][14] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][15] = Integer(32, 256, PUBLIC);
 
   Integer hashresult[8];
-
+  
   computeSHA256_d_1blocks(message, hashresult);
 
   for(int i=0; i<8; i++) {
