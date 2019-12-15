@@ -212,11 +212,31 @@ Mask_l localize_Mask(Mask_d mask) {
   return to_return;
 }
 
+// constructor that converts strings to mutable char *s (per rust req)
+void fillEcdsaPartialSig_l(EcdsaPartialSig_l *eps, string r, string kinv) {
+  /*
+  eps->r = new char[r.length() + 1];
+  strcpy(eps->r, r.c_str());
+  eps->r[r.length()] = '\0';
+
+  eps->k_inv = new char[kinv.length() + 1];
+  strcpy(eps->k_inv, kinv.c_str());
+  eps->k_inv[kinv.length()] = '\0';
+  eps->r = r.data();
+  eps->k_inv = kinv.data();
+  */
+  eps->r = r;
+  eps->k_inv = kinv;
+}
 
 EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l psl, int party){
   EcdsaPartialSig_d to_return;
-  to_return.r = Integer(257, psl.r, party);
-  to_return.k_inv = Integer(513, psl.k_inv, party);
+  string r(psl.r);
+  to_return.r = Integer(257, r, party);
+  string kinv(psl.k_inv);
+
+  to_return.k_inv = Integer(513, kinv, party);
+  to_return.k_inv = to_return.k_inv + Integer(513, 2, party);
 
   return to_return;
 }
@@ -226,8 +246,9 @@ EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l psl, int party){
 EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d psd){
   EcdsaPartialSig_l to_return;
 
-  to_return.r = psd.r.reveal<string>(PUBLIC);
-  to_return.k_inv = psd.k_inv.reveal<string>(PUBLIC);
+  string r = psd.r.reveal<string>(PUBLIC);
+  string k_inv = psd.k_inv.reveal<string>(PUBLIC);
+  fillEcdsaPartialSig_l(&to_return, r, k_inv);
 
   return to_return;
 }

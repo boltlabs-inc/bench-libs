@@ -14,7 +14,7 @@ using namespace emp;
 void issue_tokens(
   State_l old_state_l,
   State_l new_state_l,
-  int32_t epsilon_l,
+  int64_t epsilon_l,
   HMACKeyCommitment_l hmac_key_commitment_l,
   HMACKey_l hmac_key_l,
   PayToken_l old_paytoken_l,
@@ -25,9 +25,9 @@ void issue_tokens(
   Mask_l escrow_mask_l,
   MaskCommitment_l escrow_mask_commitment_l,
   EcdsaPartialSig_l sig1, 
-  bool close_tx_escrow[1024],
+  char close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
-  bool close_tx_merch[1024]
+  char close_tx_merch[1024]
   ) {
 
   State_d old_state_d = distribute_State(old_state_l, CUST);
@@ -93,86 +93,97 @@ void issue_tokens(
  * exactly 1024 bits according to the SHA256 spec.
  */
 void build_masked_tokens_cust(
-  PubKey pkM,
-  bool amount[64],
-  bool *com_new,
-  RevLock rl_old,
+  struct PubKey pkM,
+  uint64_t amount,
+  struct RevLock_l rl_com, // TYPISSUE: this doesn't match the docs. should be a commitment
   int port,
   string ip_addr,
+  struct MaskCommitment_l paymask_com,
+  struct HMACKeyCommitment_l key_com,
 
-  State w_new,
-  State w_old,
-  bool *t,
-  bool pt_old[256],
-  bool close_tx_escrow[1024],
-  bool close_tx_merch[1024],
+  struct State_l w_new,
+  struct State_l w_old,
+  char *t,
+  struct PayToken_l pt_old,
+  char close_tx_escrow[1024],
+  char close_tx_merch[1024],
 
-  bool ct_masked[256],
-  bool pt_masked[256]
+  char ct_masked[256],
+  char pt_masked[256]
 ) {
-  
   // todo: replace new/delete with sweet auto
   NetIO * io = new NetIO("127.0.0.1", port);
   setup_semi_honest(io, CUST);
 
-  EcdsaPartialSig_l dummy_sig;
-
+  // hardcoded data for run-throughs 
+  for (int i=0; i<1024; i++) {
+    close_tx_escrow[i] = '1';
+  }
   for (int i=0; i < 10; i+=2) {
-    close_tx_escrow[1023-i] = true;
+    close_tx_escrow[1023-i] = '0';
   }
 
-  State_l old_state_l;
-  State_l new_state_l;
-  uint32_t epsilon_l = 0;
-  HMACKeyCommitment_l hmac_key_commitment_l;
+  // placeholders for vars passed by merchant
+  // TODO maybe do all the distributing here, before calling issue_tokens
   HMACKey_l hmac_key_l;
-  PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
   Mask_l merch_mask_l;
   MaskCommitment_l merch_mask_commitment_l;
   Mask_l escrow_mask_l;
   MaskCommitment_l escrow_mask_commitment_l;
+  EcdsaPartialSig_l dummy_sig;
 
-  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
+  issue_tokens(w_old, w_new, amount, key_com, hmac_key_l, pt_old, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
 
   delete io;
 }
 
 void build_masked_tokens_merch(
-  PubKey pkM,
-  bool amount[64],
-  bool *com_new,
-  RevLock rl_old,
+  struct PubKey pkM,
+  uint64_t amount,
+  struct RevLock_l rl_com, // TYPISSUE: this doesn't match the docs. should be a commitment
   int port,
   string ip_addr,
+  struct MaskCommitment_l paymask_com,
+  struct HMACKeyCommitment_l key_com,
 
-  bool close_mask[256],
-  bool pay_mask[256],
-  EcdsaPartialSig_l sig1,
-  EcdsaPartialSig_l sig2,
-  EcdsaPartialSig_l sig3
+  struct HMACKey_l hmac_key,
+  struct HMACKeyCommitmentOpening open_hmac_key,
+  struct Mask_l close_mask,
+  struct Mask_l pay_mask,
+  struct EcdsaPartialSig_l sig1,
+  struct EcdsaPartialSig_l sig2,
+  struct EcdsaPartialSig_l sig3
 ) {
 
   // todo: replace new/delete with sweet auto
   NetIO * io = new NetIO(nullptr, port);
   setup_semi_honest(io, MERCH);
 
-  // hardcod test values 
-  sig1.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
-  sig1.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
+  // hardcode test values using boost to get char*s.
+  /*
+  string r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
+  string kinv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
 
+  fillEcdsaPartialSig_l(&sig1, r, kinv);
+  fillEcdsaPartialSig_l(&sig2, r, kinv);
+  */
+  sig1.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
   sig2.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
+  sig1.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
   sig2.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
 
   // define dummy (customer) inputs
-  bool dummy_tx[1024];
+  char dummy_tx[1024];
+  // fill this in so signature_hash doesn't crash 
+  // TODO find a better way/location to initialize vars
+  for (int i=0; i<1024; i++) {
+    dummy_tx[i] = '0';  
+  }
 
   State_l old_state_l;
   State_l new_state_l;
-  uint32_t epsilon_l = 0;
-  HMACKeyCommitment_l hmac_key_commitment_l;
-  HMACKey_l hmac_key_l;
   PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
@@ -181,7 +192,7 @@ void build_masked_tokens_merch(
   Mask_l escrow_mask_l;
   MaskCommitment_l escrow_mask_commitment_l;
 
-  issue_tokens(old_state_l, new_state_l, epsilon_l, hmac_key_commitment_l, hmac_key_l, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
+  issue_tokens(old_state_l, new_state_l, amount, key_com, hmac_key, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
 
   delete io;
 }
@@ -326,7 +337,7 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
   message[0][15] = Integer(32, 256, PUBLIC);
 
   Integer hashresult[8];
-  
+
   computeSHA256_d_1blocks(message, hashresult);
 
   for(int i=0; i<8; i++) {

@@ -17,26 +17,36 @@ int main(int argc, char** argv) {
 
   assert (argc == 2);
   int party = atoi(argv[1]);
+
+  uint64_t amt = 100;
+  RevLock_l rl;
+  MaskCommitment_l paymask_com;
+  HMACKeyCommitment_l key_com;
   int port = 12345;
 
   if (party == MERCH) {
 	PubKey pkM;
-	RevLock rl;
 	EcdsaPartialSig_l sig;
-	bool mask[256];
+    struct HMACKey_l hmac_key;
+    struct HMACKeyCommitmentOpening open_hmac_key;
+    struct Mask_l mask;
 	build_masked_tokens_merch(
-	  pkM, nullptr, nullptr, rl, port, "127.0.0.1",
+	  pkM, amt, rl, port, "127.0.0.1",
+      paymask_com, key_com,
+      hmac_key, open_hmac_key,
 	  mask, mask, sig, sig, sig);
+
   } else {
 	PubKey pkM;
-	RevLock rl;
-	State w;
-	bool tx[1024] = { 0 };
-	bool res[256] = { 0 };
+	State_l w;
+    PayToken_l pt_old;
+	char tx[1024];
+	char res[256];
 
 	build_masked_tokens_cust(
-	  pkM, nullptr, nullptr, rl, port, "127.0.0.1",
-	  w, w, nullptr, nullptr, tx, tx, 
+	  pkM, amt, rl, port, "127.0.0.1",
+      paymask_com, key_com,
+	  w, w, nullptr, pt_old, tx, tx, 
 	  res, res);
   }
 

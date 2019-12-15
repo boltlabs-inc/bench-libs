@@ -15,7 +15,7 @@ const int QLEN = 256;
 // computes SHA256 hash of the input
 // todo; maybe require this in a different format 
 // (e.g. padded and in blocks)
-Integer signature_hash(Integer m);
+Integer signature_hash(char cmsg[1024]);
 
 // hard-coded conversion of secp256k1 point order 
 // (e.g. modulus)
@@ -29,7 +29,7 @@ string get_ECDSA_params();
 // sk : private key integer
 // ki : private key
 // returns signature, encoded in Integer
-Integer ecdsa_sign(bool msg[1024], EcdsaPartialSig_l s);
+Integer ecdsa_sign(char msg[1024], EcdsaPartialSig_l s);
 
 // ecdsa signs a hashed private message
 Integer sign_hashed_msg(Integer e, EcdsaPartialSig_d partialsig);
