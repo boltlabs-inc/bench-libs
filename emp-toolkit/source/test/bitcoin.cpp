@@ -41,7 +41,7 @@ string test_output(Integer result[8]);
  *
  * \return b  : success bit
  */
-Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d);
+Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d);
 
 // this is not actually random because I don't seed rand().
 // so it produces the same output every time it's compiled.
@@ -228,7 +228,7 @@ string run_secure_HMACsign(string key, string msg) {
 }
 
 // make sure new close transactions are well-formed
-Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d) {
+Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d) {
   Bit b;
 
   
