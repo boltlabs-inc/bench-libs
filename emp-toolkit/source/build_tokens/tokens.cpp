@@ -351,6 +351,8 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
 Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d) {
   Bit b;
 
+  
+  
 /* validates closing transactions against a wallet
  * for each transaction:
  * 0. check that balances are correct
