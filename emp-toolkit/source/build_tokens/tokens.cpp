@@ -97,7 +97,7 @@ void build_masked_tokens_cust(
   uint64_t amount,
   struct RevLock_l rl_com, // TYPISSUE: this doesn't match the docs. should be a commitment
   int port,
-  string ip_addr,
+  char ip_addr[15],
   struct MaskCommitment_l paymask_com,
   struct HMACKeyCommitment_l key_com,
 
@@ -144,7 +144,7 @@ void build_masked_tokens_merch(
   uint64_t amount,
   struct RevLock_l rl_com, // TYPISSUE: this doesn't match the docs. should be a commitment
   int port,
-  string ip_addr,
+  char ip_addr[15],
   struct MaskCommitment_l paymask_com,
   struct HMACKeyCommitment_l key_com,
 
@@ -162,17 +162,12 @@ void build_masked_tokens_merch(
   setup_semi_honest(io, MERCH);
 
   // hardcode test values using boost to get char*s.
-  /*
-  string r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
-  string kinv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
 
-  fillEcdsaPartialSig_l(&sig1, r, kinv);
-  fillEcdsaPartialSig_l(&sig2, r, kinv);
-  */
-  sig1.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
-  sig2.r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
-  sig1.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
-  sig2.k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
+  string r = "108792476108599305057612221643697785065475034835954270988586688301027220077907";
+  string k_inv = "44657876998057202178264530375095959644163723589174927475562391733096641768603";
+
+  fillEcdsaPartialSig_l(&sig1, r, k_inv);
+  fillEcdsaPartialSig_l(&sig2, r, k_inv);
 
   // define dummy (customer) inputs
   char dummy_tx[1024];
@@ -351,8 +346,6 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
 Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d) {
   Bit b;
 
-  
-  
 /* validates closing transactions against a wallet
  * for each transaction:
  * 0. check that balances are correct

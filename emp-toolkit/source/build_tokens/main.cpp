@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
   assert (argc == 2);
   int party = atoi(argv[1]);
 
+  char ip[15] = "127.0.0.1";
   uint64_t amt = 100;
   RevLock_l rl;
   MaskCommitment_l paymask_com;
@@ -31,7 +32,7 @@ int main(int argc, char** argv) {
     struct HMACKeyCommitmentOpening open_hmac_key;
     struct Mask_l mask;
 	build_masked_tokens_merch(
-	  pkM, amt, rl, port, "127.0.0.1",
+	  pkM, amt, rl, port, ip,
       paymask_com, key_com,
       hmac_key, open_hmac_key,
 	  mask, mask, sig, sig, sig);
@@ -44,7 +45,7 @@ int main(int argc, char** argv) {
 	char res[256];
 
 	build_masked_tokens_cust(
-	  pkM, amt, rl, port, "127.0.0.1",
+	  pkM, amt, rl, port, ip,
       paymask_com, key_com,
 	  w, w, nullptr, pt_old, tx, tx, 
 	  res, res);

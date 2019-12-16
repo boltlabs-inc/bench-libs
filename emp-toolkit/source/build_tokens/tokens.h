@@ -1,8 +1,10 @@
-#pragma once 
+#ifndef TOKENS_INCLUDE_H_
+#define TOKENS_INCLUDE_H_
 
-#include <string>
-#include "tokens-misc.h"
-using namespace std;
+#ifdef __cplusplus
+extern "C" {
+#include <stdint.h>
+#endif
 
 /*
  * describes an API for calling MPC functions 
@@ -75,19 +77,23 @@ struct PayToken_l {
 };
 
 /* ECDSA public key type 
- * \param pubkey    : a public key. TYPISSUE - probably not an integer */
+ * \param pubkey    : a public key. 
+ * TYPISSUE - how many bits is an ECDSA public key? Do we actually need this?
+ */
 struct PubKey {
-  string pubkey;
+  char pubkey[256]; 
 };
 
 /* ECDSA partial signature
 * This is a partial signature. It is based on a raondomly chosen k, message x, public key G, and public modulus q. Let (rx, ry) = kG.
 * \param r     : r = rx*x mod q. Represented as a decimal string. (256 bits)
 * \param k_inv : k_inv = k^-1. Represented as a decimal string. (256 bits)
+*
+* The parameter sizes are overly generous since we're storing them as decimal.
 */
 struct EcdsaPartialSig_l {
-  string r;
-  string k_inv;
+  char r[256]; 
+  char k_inv[256];
 };
 
 /* This is a nonce.  Its used to prevent double spends
@@ -161,7 +167,7 @@ void build_masked_tokens_cust(
   uint64_t amount,
   struct RevLock_l rl_com, // TYPISSUE: this doesn't match the docs. should be a commitment
   int port,
-  string ip_addr,
+  char ip_addr[15], // TYPISSUE: do we want to support ipv6?
   struct MaskCommitment_l paymask_com,
   struct HMACKeyCommitment_l key_com,
 
@@ -215,7 +221,7 @@ void build_masked_tokens_merch(
   uint64_t amount,
   struct RevLock_l rl_com, // TYPISSUE: this doesn't match the docs. should be a commitment
   int port,
-  string ip_addr,
+  char ip_addr[15], // TYPISSUE: what IP version?
   struct MaskCommitment_l paymask_com,
   struct HMACKeyCommitment_l key_com,
 
@@ -228,4 +234,7 @@ void build_masked_tokens_merch(
   struct EcdsaPartialSig_l sig3
 );
 
-
+#ifdef __cplusplus
+}
+#endif
+#endif // TOKENS_INCLUDE_H_

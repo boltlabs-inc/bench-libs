@@ -213,20 +213,20 @@ Mask_l localize_Mask(Mask_d mask) {
 }
 
 // constructor that converts strings to mutable char *s (per rust req)
-void fillEcdsaPartialSig_l(EcdsaPartialSig_l *eps, string r, string kinv) {
-  /*
-  eps->r = new char[r.length() + 1];
-  strcpy(eps->r, r.c_str());
-  eps->r[r.length()] = '\0';
+void fillEcdsaPartialSig_l(EcdsaPartialSig_l *eps, string r, string k_inv) {
+  for (uint i=0; i < 256; i++) {
+    if (i < r.length()) {
+      eps->r[i] = r[i];
+    } else {
+      eps->r[i] = '\0';
+    }
 
-  eps->k_inv = new char[kinv.length() + 1];
-  strcpy(eps->k_inv, kinv.c_str());
-  eps->k_inv[kinv.length()] = '\0';
-  eps->r = r.data();
-  eps->k_inv = kinv.data();
-  */
-  eps->r = r;
-  eps->k_inv = kinv;
+    if (i < k_inv.length()) {
+      eps->k_inv[i] = k_inv[i];
+    } else {
+      eps->k_inv[i] = '\0';
+    }
+  }
 }
 
 EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l psl, int party){
