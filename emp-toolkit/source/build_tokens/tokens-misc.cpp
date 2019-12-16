@@ -236,7 +236,7 @@ EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l psl, int party){
   string kinv(psl.k_inv);
 
   to_return.k_inv = Integer(513, kinv, party);
-  to_return.k_inv = to_return.k_inv + Integer(513, 2, party);
+  to_return.k_inv = to_return.k_inv;
 
   return to_return;
 }
