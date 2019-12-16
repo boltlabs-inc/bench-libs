@@ -263,7 +263,7 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
 
   Integer hashresult[8];
 
-  computeSHA256_d(message, hashresult);
+  computeSHA256_2d(message, hashresult);
 
   Bit b; // TODO initialize to 0
 
@@ -333,7 +333,7 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
 
   Integer hashresult[8];
 
-  computeSHA256_d_1blocks(message, hashresult);
+  computeSHA256_1d(message, hashresult);
 
   for(int i=0; i<8; i++) {
      Bit not_equal = !(maskcommitment.commitment[i].equal(hashresult[i]));

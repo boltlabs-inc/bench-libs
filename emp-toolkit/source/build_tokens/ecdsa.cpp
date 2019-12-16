@@ -38,7 +38,7 @@ Integer signature_hash(char cmsg[1024]) {
   }
   
   Integer result[8];
-  computeSHA256(message, result);
+  computeSHA256_2l(message, result);
 
   Integer hash = composeSHA256result(result);
   
