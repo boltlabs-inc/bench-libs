@@ -48,14 +48,6 @@ struct HMACKey_l {
 struct HMACKeyCommitment_l {
   uint32_t commitment[8];
 };
-/* The opening to a commitment to an HMAC key
- * To open a hash based commitment, we need an actual key and potentially randomness
- * GABE: I'm throwing randomness in here for now, but we can rip it out?
- */
-struct HMACKeyCommitmentOpening {
-  struct HMACKey_l key;
-  int randomness[8];
-};
 
 /* random mask value */
 struct Mask_l {
@@ -226,7 +218,6 @@ void build_masked_tokens_merch(
   struct HMACKeyCommitment_l key_com,
 
   struct HMACKey_l hmac_key,
-  struct HMACKeyCommitmentOpening open_hmac_key,
   struct Mask_l close_mask,
   struct Mask_l pay_mask,
   struct EcdsaPartialSig_l sig1,

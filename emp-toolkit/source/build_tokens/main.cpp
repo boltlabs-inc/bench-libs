@@ -29,12 +29,11 @@ int main(int argc, char** argv) {
 	PubKey pkM;
 	EcdsaPartialSig_l sig;
     struct HMACKey_l hmac_key;
-    struct HMACKeyCommitmentOpening open_hmac_key;
     struct Mask_l mask;
 	build_masked_tokens_merch(
 	  pkM, amt, rl, port, ip,
       paymask_com, key_com,
-      hmac_key, open_hmac_key,
+      hmac_key,
 	  mask, mask, sig, sig, sig);
 
   } else {

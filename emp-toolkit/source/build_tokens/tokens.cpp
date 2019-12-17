@@ -149,7 +149,6 @@ void build_masked_tokens_merch(
   struct HMACKeyCommitment_l key_com,
 
   struct HMACKey_l hmac_key,
-  struct HMACKeyCommitmentOpening open_hmac_key,
   struct Mask_l close_mask,
   struct Mask_l pay_mask,
   struct EcdsaPartialSig_l sig1,
