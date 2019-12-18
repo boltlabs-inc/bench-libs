@@ -233,10 +233,10 @@ Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_esc
   // 112 bytes --> 896
   Integer customer_delayed_script_hash_preimage[2][16];
 
-  // OPCODE 0x63a914 || 1 byte of Rev Lock
+  // OPCODE || 1 byte of Rev Lock
   customer_delayed_script_hash_preimage[0][0] = Integer(32, 1672025088 /*0x63a91400*/, PUBLIC) | /* First byte of revlock*/(new_state_d.rl.revlock[0] >> 24);
 
-  // 32 bytes of Rev Lock
+  // 31 remaining bytes of Rev Lock
   customer_delayed_script_hash_preimage[0][1] = (/* last 3 bytes */ new_state_d.rl.revlock[0] << 8) | ( /* first byte of the next int */ new_state_d.rl.revlock[1] >> 24);
   customer_delayed_script_hash_preimage[0][2] = (new_state_d.rl.revlock[1] << 8) | (new_state_d.rl.revlock[2] >> 24);
   customer_delayed_script_hash_preimage[0][3] = (new_state_d.rl.revlock[2] << 8) | (new_state_d.rl.revlock[3] >> 24);
@@ -246,50 +246,50 @@ Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_esc
   customer_delayed_script_hash_preimage[0][7] = (new_state_d.rl.revlock[6] << 8) | (new_state_d.rl.revlock[7] >> 24);
   customer_delayed_script_hash_preimage[0][8] = (new_state_d.rl.revlock[7] << 8) | Integer(32, 136 /*0x00000088*/, PUBLIC);
 
-  customer_delayed_script_hash_preimage[0][9] = Integer(32, 553648128, PUBLIC) | merch_dispute_key.key[0] >> 8; //0x21000000 // taking 3 bytes from the key
+  customer_delayed_script_hash_preimage[0][9]  = Integer(32, 553648128, PUBLIC) | merch_dispute_key.key[0] >> 8; //0x21000000 // taking 3 bytes from the key
   customer_delayed_script_hash_preimage[0][10] = (merch_dispute_key.key[0] << 24) | (merch_dispute_key.key[1] >> 8); // byte 4-7
   customer_delayed_script_hash_preimage[0][11] = (merch_dispute_key.key[1] << 24) | (merch_dispute_key.key[2] >> 8); // byte 8-11
   customer_delayed_script_hash_preimage[0][12] = (merch_dispute_key.key[2] << 24) | (merch_dispute_key.key[3] >> 8); // bytes 12-15
   customer_delayed_script_hash_preimage[0][13] = (merch_dispute_key.key[3] << 24) | (merch_dispute_key.key[4] >> 8); // bytes 16-19
   customer_delayed_script_hash_preimage[0][14] = (merch_dispute_key.key[4] << 24) | (merch_dispute_key.key[5] >> 8); // bytes 20-23
   customer_delayed_script_hash_preimage[0][15] = (merch_dispute_key.key[5] << 24) | (merch_dispute_key.key[6] >> 8); // bytes 24-27
-  customer_delayed_script_hash_preimage[2][0]  = (merch_dispute_key.key[6] << 24) | (merch_dispute_key.key[7] >> 8); // bytes 28-31
-  customer_delayed_script_hash_preimage[2][1]  = (merch_dispute_key.key[7] << 16) | Integer(32, 26368/*0x00006700*/, PUBLIC) | Integer(32,2 /*0x000002*/, PUBLIC); // bytes 32-33 // 0x67
+  customer_delayed_script_hash_preimage[1][0]  = (merch_dispute_key.key[6] << 24) | (merch_dispute_key.key[7] >> 8); // bytes 28-31
+  customer_delayed_script_hash_preimage[1][1]  = (merch_dispute_key.key[7] << 16) | Integer(32, 26368/*0x00006700*/, PUBLIC) | Integer(32,2 /*0x000002*/, PUBLIC); // bytes 32-33 // 0x67
 
   // This previous last byte and the following to bytes is the delay.  We should talk about how long we want them to be
-  customer_delayed_script_hash_preimage[2][2]  = Integer(32, 3473211392 /*0xcf050000*/, PUBLIC) | Integer(32, 45685/*0x0000b275*/, PUBLIC);
-  customer_delayed_script_hash_preimage[2][3]  = Integer(32, 553648128 /*0x21000000*/, PUBLIC)  | (customer_output_key.key[0] >> 8);
-  customer_delayed_script_hash_preimage[2][4]  = (customer_output_key.key[0] << 24) | (customer_output_key.key[1] >> 8);
-  customer_delayed_script_hash_preimage[2][5]  = (customer_output_key.key[1] << 24) | (customer_output_key.key[2] >> 8);
-  customer_delayed_script_hash_preimage[2][6]  = (customer_output_key.key[2] << 24) | (customer_output_key.key[3] >> 8);
-  customer_delayed_script_hash_preimage[2][7]  = (customer_output_key.key[3] << 24) | (customer_output_key.key[4] >> 8);
-  customer_delayed_script_hash_preimage[2][8]  = (customer_output_key.key[4] << 24) | (customer_output_key.key[5] >> 8);
-  customer_delayed_script_hash_preimage[2][9]  = (customer_output_key.key[5] << 24) | (customer_output_key.key[6] >> 8);
-  customer_delayed_script_hash_preimage[2][10]  = (customer_output_key.key[6] << 24) | (customer_output_key.key[7] >> 8);
-  customer_delayed_script_hash_preimage[2][11]  = (customer_output_key.key[7] << 8) | Integer(32, /*0x000068ac*/, PUBLIC);
+  customer_delayed_script_hash_preimage[1][2]  = Integer(32, 3473211392 /*0xcf050000*/, PUBLIC) | Integer(32, 45685/*0x0000b275*/, PUBLIC);
+  customer_delayed_script_hash_preimage[1][3]  = Integer(32, 553648128 /*0x21000000*/, PUBLIC)  | (customer_output_key.key[0] >> 8);
+  customer_delayed_script_hash_preimage[1][4]  = (customer_output_key.key[0] << 24) | (customer_output_key.key[1] >> 8);
+  customer_delayed_script_hash_preimage[1][5]  = (customer_output_key.key[1] << 24) | (customer_output_key.key[2] >> 8);
+  customer_delayed_script_hash_preimage[1][6]  = (customer_output_key.key[2] << 24) | (customer_output_key.key[3] >> 8);
+  customer_delayed_script_hash_preimage[1][7]  = (customer_output_key.key[3] << 24) | (customer_output_key.key[4] >> 8);
+  customer_delayed_script_hash_preimage[1][8]  = (customer_output_key.key[4] << 24) | (customer_output_key.key[5] >> 8);
+  customer_delayed_script_hash_preimage[1][9]  = (customer_output_key.key[5] << 24) | (customer_output_key.key[6] >> 8);
+  customer_delayed_script_hash_preimage[1][10] = (customer_output_key.key[6] << 24) | (customer_output_key.key[7] >> 8);
+  customer_delayed_script_hash_preimage[1][11] = (customer_output_key.key[7] << 8) | Integer(32, /*0x000068ac*/, PUBLIC);
 
-  customer_delayed_script_hash_preimage[2][12] = Integer(32, 2147483648/*0x80000000*/, PUBLIC); 
-  customer_delayed_script_hash_preimage[2][13] = Integer(32, 0, PUBLIC); //0x00000000; 
-  customer_delayed_script_hash_preimage[2][14] = Integer(32, 0, PUBLIC); //0x00000000; 
-  customer_delayed_script_hash_preimage[2][15] = Integer(32, 896, PUBLIC); 
+  customer_delayed_script_hash_preimage[1][12] = Integer(32, 2147483648/*0x80000000*/, PUBLIC); 
+  customer_delayed_script_hash_preimage[1][13] = Integer(32, 0, PUBLIC); //0x00000000; 
+  customer_delayed_script_hash_preimage[1][14] = Integer(32, 0, PUBLIC); //0x00000000; 
+  customer_delayed_script_hash_preimage[1][15] = Integer(32, 896, PUBLIC); 
 
   Integer customer_delayed_script_hash[8];
 
-  // DO A DOUBLE SHA256
+  computeSHA256_2d(customer_delayed_script_hash_preimage, customer_delayed_script_hash);
 
   // 150 bytes
   Integer hash_outputs_preimage[3][16];
 
-  hash_outputs_preimage[0][0] = // first bytes of customer balance
-  hash_outputs_preimage[0][1] = // second bytes of customer blanace
-  hash_outputs_preimage[0][2] = Integer(32, 570433536 /*0x22002000*/, PUBLIC) | (customer_delayed_script_hash[0] >> 24); // OPCODE and the first byte of the prev hash output
-  hash_outputs_preimage[0][3] = (customer_delayed_script_hash[0] << 8) | (customer_delayed_script_hash[1] >> 24); // end of byte 1 and first byte of 2...
-  hash_outputs_preimage[0][4] = (customer_delayed_script_hash[1] << 8) | (customer_delayed_script_hash[2] >> 24);
-  hash_outputs_preimage[0][5] = (customer_delayed_script_hash[2] << 8) | (customer_delayed_script_hash[3] >> 24);
-  hash_outputs_preimage[0][6] = (customer_delayed_script_hash[3] << 8) | (customer_delayed_script_hash[4] >> 24);
-  hash_outputs_preimage[0][7] = (customer_delayed_script_hash[4] << 8) | (customer_delayed_script_hash[5] >> 24);
-  hash_outputs_preimage[0][8] = (customer_delayed_script_hash[5] << 8) | (customer_delayed_script_hash[6] >> 24);
-  hash_outputs_preimage[0][9] = (customer_delayed_script_hash[6] << 8) | (customer_delayed_script_hash[7] >> 24);
+  hash_outputs_preimage[0][0]  = // first bytes of customer balance
+  hash_outputs_preimage[0][1]  = // second bytes of customer blanace
+  hash_outputs_preimage[0][2]  = Integer(32, 570433536 /*0x22002000*/, PUBLIC) | (customer_delayed_script_hash[0] >> 24); // OPCODE and the first byte of the prev hash output
+  hash_outputs_preimage[0][3]  = (customer_delayed_script_hash[0] << 8) | (customer_delayed_script_hash[1] >> 24); // end of byte 1 and first byte of 2...
+  hash_outputs_preimage[0][4]  = (customer_delayed_script_hash[1] << 8) | (customer_delayed_script_hash[2] >> 24);
+  hash_outputs_preimage[0][5]  = (customer_delayed_script_hash[2] << 8) | (customer_delayed_script_hash[3] >> 24);
+  hash_outputs_preimage[0][6]  = (customer_delayed_script_hash[3] << 8) | (customer_delayed_script_hash[4] >> 24);
+  hash_outputs_preimage[0][7]  = (customer_delayed_script_hash[4] << 8) | (customer_delayed_script_hash[5] >> 24);
+  hash_outputs_preimage[0][8]  = (customer_delayed_script_hash[5] << 8) | (customer_delayed_script_hash[6] >> 24);
+  hash_outputs_preimage[0][9]  = (customer_delayed_script_hash[6] << 8) | (customer_delayed_script_hash[7] >> 24);
   hash_outputs_preimage[0][10] = (customer_delayed_script_hash[7] << 8) |  /*first byte of merch balance >> 24*/;
   hash_outputs_preimage[0][11] =  /*second through 5th bytes of merch balance */;
   hash_outputs_preimage[0][12] =  /* bytes 6,7,8 of merch balance << 8*/ | Integer(32, 16 /*0x00000016*/, PUBLIC);
@@ -323,14 +323,16 @@ Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_esc
   hash_outputs_preimage[2][7]  = Integer(32,0,PUBLIC);
   hash_outputs_preimage[2][8]  = Integer(32,0,PUBLIC);
   hash_outputs_preimage[2][9]  = Integer(32,0,PUBLIC);
-  hash_outputs_preimage[2][10]  = Integer(32,0,PUBLIC);
-  hash_outputs_preimage[2][11]  = Integer(32,0,PUBLIC);
-  hash_outputs_preimage[2][12]  = Integer(32,0,PUBLIC);
-  hash_outputs_preimage[2][13]  = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][10] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][11] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][12] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][13] = Integer(32,0,PUBLIC);
   hash_outputs_preimage[2][14] = Integer(32, 0, PUBLIC); //0x00000000; 
   hash_outputs_preimage[2][15] = Integer(32, 1200, PUBLIC); 
 
   Integer hash_outputs[8];
+
+  computeDoubleSHA256_3d(hash_outputs_preimage, hash_outputs);
 
   // TODO COMPUTE THE DOUBLE HASH
 
@@ -410,13 +412,11 @@ Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_esc
   total_preimage[3][12]  = Integer(32, 0, PUBLIC);
   total_preimage[3][13]  = Integer(32, 0, PUBLIC);
   total_preimage[3][14]  = Integer(32, 0, PUBLIC); //0x00000000; 
-  total_preimage[3][15]  = Integer(32, 912, PUBLIC); 
-
-  // TODO COMPUTE THE DOUBLE HASH!
-  // THIS IS THE ESCROW TRANSACTION
+  total_preimage[3][15]  = Integer(32, 1824, PUBLIC); // 228*8 = 1824 bits
 
   Integer escrow_digest[8];
 
+  computeSHA256_4d(total_preimage, escrow_digest);
 
   // // Escrow amount.  Check from state
   // b = (b|close_tx_escrow_d.tx[74].equals(new_state_d.balance_escrow.balance[0]));
