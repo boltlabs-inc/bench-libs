@@ -20,10 +20,6 @@ void issue_tokens(
   PayToken_l old_paytoken_l,
   Mask_l paytoken_mask_l,
   MaskCommitment_l paytoken_mask_commitment_l,
-  Mask_l merch_mask_l,
-  MaskCommitment_l merch_mask_commitment_l,
-  Mask_l escrow_mask_l,
-  MaskCommitment_l escrow_mask_commitment_l,
   EcdsaPartialSig_l sig1, 
   char close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
@@ -76,6 +72,7 @@ void issue_tokens(
 
   // mask pay and close tokens
   b = ( b | mask_paytoken(new_paytoken_d.paytoken, paytoken_mask_d, paytoken_mask_commitment_d)); // pay token 
+  // NO NEED TO COMMIT AND CHECK TO THESE
   b = ( b | mask_closemerchtoken(signed_merch_tx_parsed, merch_mask_d, merch_mask_commitment_d)); // close token - merchant close 
   b = ( b | mask_closeescrowtoken(signed_escrow_tx_parsed, escrow_mask_d, escrow_mask_commitment_d)); // close token - escrow close 
 
@@ -300,6 +297,13 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d)
 
   b = (b | new_state_d.balance_merch.equal(old_state_d.balance_merch + epsilon_d));
   b = (b | new_state_d.balance_cust.equal(old_state_d.balance_cust - epsilon_d));
+
+  // ZERO CHECK
+    // Make sure both Custom and Merch are going to be nonzero balances after epsilon
+
+  // Also need to check that the revealed nonce matches the old state
+
+  // Check that we have the right RL_i is old state and that it opens to the public input commitment
 
   return b;
 }
