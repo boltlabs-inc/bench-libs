@@ -9,7 +9,7 @@ using namespace std;
 /* This function executes the inner hash of the HMAC algorithm
  * The resulting hash is returned in innerhashresult
  * We are computing SHA256(  ( key ^ ipad ) || state )
- * This requires 3 SHA256 rounds (state is ~928 bits and key^ipad is 512bits)
+ * This requires 4 SHA256 rounds (state is ~928 bits and key^ipad is 512bits)
  */
 void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
 
@@ -17,7 +17,7 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
   Integer ipad(32, 909522486, PUBLIC);
 
 
-  Integer message[3][16];
+  Integer message[4][16];
 
   // XORing the key with inner pad
   for(int i=0; i<16; i++) {
@@ -68,13 +68,32 @@ void innerhash(HMACKey_d key, State_d state, Integer innerhashresult[8]) {
   message[2][11] = state.txid_escrow.txid[6];
   message[2][12] = state.txid_escrow.txid[7];
 
+  message[2][13] = state.HashPrevOuts_merch.txid[0];
+  message[2][14] = state.HashPrevOuts_merch.txid[1];
+  message[2][15] = state.HashPrevOuts_merch.txid[2];
+  message[3][0]  = state.HashPrevOuts_merch.txid[3];
+  message[3][1]  = state.HashPrevOuts_merch.txid[4];
+  message[3][2]  = state.HashPrevOuts_merch.txid[5];
+  message[3][3]  = state.HashPrevOuts_merch.txid[6];
+  message[3][4]  = state.HashPrevOuts_merch.txid[7];
+
+  message[3][5]  = state.HashPrevOuts_escrow.txid[0];
+  message[3][6]  = state.HashPrevOuts_escrow.txid[1];
+  message[3][7]  = state.HashPrevOuts_escrow.txid[2];
+  message[3][8]  = state.HashPrevOuts_escrow.txid[3];
+  message[3][9]  = state.HashPrevOuts_escrow.txid[4];
+  message[3][10] = state.HashPrevOuts_escrow.txid[5];
+  message[3][11] = state.HashPrevOuts_escrow.txid[6];
+  message[3][12] = state.HashPrevOuts_escrow.txid[7];
+
+
   // a single 1 bit, followed by 0's
   // 64 bit big-endian representation of 1440
-  message[2][13] = Integer(32, -2147483648, PUBLIC); //0x80000000;
-  message[2][14] = Integer(32, 0, PUBLIC); //0x00000000;
-  message[2][15] = Integer(32, 1440, PUBLIC); //0x000003a0;
+  message[3][13] = Integer(32, -2147483648, PUBLIC); //0x80000000;
+  message[3][14] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[3][15] = Integer(32, 1952, PUBLIC); //0x000003a0;
 
-  computeSHA256_3d(message, innerhashresult);
+  computeSHA256_4d(message, innerhashresult);
 }
 
 /* This function execute the outer hash of the HMAC algorithm

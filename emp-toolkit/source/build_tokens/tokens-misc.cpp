@@ -32,6 +32,26 @@ HMACKey_l localize_HMACKey(HMACKey_d key){
   return to_return;
 }
 
+RevLockCommitment_d distribute_RevLockCommitment(RevLockCommitment_l rlc, int party) {
+  RevLockCommitment_d to_return;
+
+  to_return.commitment[0] = Integer(32, rlc.commitment[0], party);
+  to_return.commitment[1] = Integer(32, rlc.commitment[1], party);
+  to_return.commitment[2] = Integer(32, rlc.commitment[2], party);
+  to_return.commitment[3] = Integer(32, rlc.commitment[3], party);
+  to_return.commitment[4] = Integer(32, rlc.commitment[4], party);
+  to_return.commitment[5] = Integer(32, rlc.commitment[5], party);
+  to_return.commitment[6] = Integer(32, rlc.commitment[6], party);
+  to_return.commitment[7] = Integer(32, rlc.commitment[7], party);
+
+  return to_return;
+}
+
+RevLockCommitment_l localize_RevLockCommitment(RevLockCommitment_d rlc) {
+  RevLockCommitment_l to_return;
+  return to_return;
+}
+
 RevLock_d distribute_RevLock(RevLock_l revlock, int party) {
 
   RevLock_d to_return;
@@ -130,6 +150,9 @@ State_d distribute_State(State_l state, int party) {
   to_return.txid_merch = distribute_Txid(state.txid_merch, party);
   to_return.txid_escrow = distribute_Txid(state.txid_escrow, party);
 
+  to_return.HashPrevOuts_merch = distribute_Txid(state.HashPrevOuts_merch, party);
+  to_return.HashPrevOuts_escrow = distribute_Txid(state.HashPrevOuts_escrow, party);
+
   return to_return;
 }
 
@@ -211,6 +234,30 @@ Mask_l localize_Mask(Mask_d mask) {
 
   return to_return;
 }
+
+BitcoinPublicKey_d distribute_BitcoinPublicKey(BitcoinPublicKey_l pubKey, int party) {
+
+  BitcoinPublicKey_d to_return;
+
+  to_return.key[0] = Integer(32, pubKey.key[0], party);
+  to_return.key[1] = Integer(32, pubKey.key[1], party);
+  to_return.key[2] = Integer(32, pubKey.key[2], party);
+  to_return.key[3] = Integer(32, pubKey.key[3], party);
+  to_return.key[4] = Integer(32, pubKey.key[4], party);
+  to_return.key[5] = Integer(32, pubKey.key[5], party);
+  to_return.key[6] = Integer(32, pubKey.key[6], party);
+  to_return.key[7] = Integer(32, pubKey.key[7], party);
+  to_return.key[8] = Integer(32, pubKey.key[8], party);
+
+  return to_return;
+}
+
+BitcoinPublicKey_l localize_BitcoinPublicKey(BitcoinPublicKey_d pubKey) {
+  BitcoinPublicKey_l to_return;
+
+  return to_return;
+}
+
 
 // constructor that converts strings to mutable char *s (per rust req)
 void fillEcdsaPartialSig_l(EcdsaPartialSig_l *eps, string r, string k_inv) {

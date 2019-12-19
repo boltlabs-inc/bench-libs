@@ -52,6 +52,8 @@ $ xxd /tmp/key
 00000010: 6f6e 6c70 6678 6e66 767a 6c79 7671 6368  onlpfxnfvzlyvqch
 00000020: 6d67 7369 6c72 6974 7578 736f 6667 7263  mgsilrituxsofgrc
 00000030: 6663 7179 6e7a 756c 7a63 7375 746f 686d  fcqynzulzcsutohm
+
+// SHORTER MESSAGE
 $ xxd /tmp/msg 
 00000000: 6463 6a62 7077 666d 7977 6f66 736c 6a79  dcjbpwfmywofsljy
 00000010: 6175 637a 6d74 676c 6f77 7962 7464 6c63  auczmtglowybtdlc
@@ -62,8 +64,25 @@ $ xxd /tmp/msg
 00000060: 7469 6872 6277 7369 6e7a 7667 7376 7879  tihrbwsinzvgsvxy
 00000070: 6864 6b7a                                hdkz
 
+// LONGER MESSAGE
+$ xxd /tmp/msg 
+00000000: 6463 6a62 7077 666d 7977 6f66 736c 6a79  dcjbpwfmywofsljy
+00000010: 6175 637a 6d74 676c 6f77 7962 7464 6c63  auczmtglowybtdlc
+00000020: 7865 6d61 7269 7a64 686d 6b7a 6a70 7a73  xemarizdhmkzjpzs
+00000030: 6a76 747a 7969 6976 6871 7468 6776 706e  jvtzyiivhqthgvpn
+00000040: 657a 6a67 6678 6466 6376 7075 7779 7466  ezjgfxdfcvpuwytf
+00000050: 6d6c 7572 7773 6468 6964 686f 7364 616c  mlurwsdhidhosdal
+00000060: 7469 6872 6277 7369 6e7a 7667 7376 7879  tihrbwsinzvgsvxy
+00000070: 6864 6b7a 7269 7a64 686d 6b7a 6a70 7a73  hdkzrizdhmkzjpzs
+00000080: 6a76 747a 7969 6976 6871 7468 6776 706e  jvtzyiivhqthgvpn
+00000090: 657a 6a67 6678 6466 6376 7075 7779 7466  ezjgfxdfcvpuwytf
+000000a0: 6d6c 7572 7773 6468 6964 686f 7364 616c  mlurwsdhidhosdal
+000000b0: 7469 6872                                tihr
+
 $ openssl dgst -sha256 -hmac $(cat /tmp/key) -hex /tmp/msg 
 HMAC-SHA256(/tmp/msg)= af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b782cc99bb
+// LONGER MESSAGE OUTPUT
+HMAC-SHA256(/tmp/msg)= 66498fdd9d5b6bd16f71cf3ffe8d37c2d34c8979faad1567bd148158840b7d54
 */
 
 // The msgs we are signing are 116 bytes long, or 29 ints long
@@ -83,7 +102,9 @@ void test_end_to_end() {
 
   CryptoPP::SecByteBlock key(test_key_bytes, 64);
 
-  string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkz";
+  // string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkz";
+  string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkzrizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihr";
+  
   string expected = reference_HMAC_sign(key, msg);
   string actual = run_secure_HMACsign(test_key, msg);
 
@@ -91,13 +112,14 @@ void test_end_to_end() {
   boost::algorithm::to_lower(actual);
 
   assert ( expected.compare(actual) == 0);
-  assert ( expected.compare("af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b782cc99bb") == 0 );
+  // assert ( expected.compare("af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b782cc99bb") == 0 );
+  assert ( expected.compare("66498fdd9d5b6bd16f71cf3ffe8d37c2d34c8979faad1567bd148158840b7d54") == 0 );
 
   // randomized tests of 116 messages
   for (int i=0; i < 100; i++) {
 
     // TODO GENERATE RANDOM KEYS
-    msg = gen_random(116);
+    msg = gen_random(180);
     string expected = reference_HMAC_sign(key, msg);
     string actual = run_secure_HMACsign(test_key, msg);
 
@@ -194,6 +216,16 @@ string run_secure_HMACsign(string key, string msg) {
   for(int i=0; i<8; i++) {
     temp = hex_msg.substr((i+21)*8, 8);
     state_l.txid_escrow.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  } 
+
+  for(int i=0; i<8; i++) {
+    temp = hex_msg.substr((i+29)*8, 8);
+    state_l.HashPrevOuts_merch.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
+
+  for(int i=0; i<8; i++) {
+    temp = hex_msg.substr((i+37)*8, 8);
+    state_l.HashPrevOuts_escrow.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   } 
 
   // MPC - run hmac 

@@ -102,11 +102,24 @@ struct RevLock_l {
   uint32_t revlock[8];
 };
 
+struct RevLockCommitment_l {
+  uint32_t commitment[8];
+};
+
 /* bitcoin-flavored transaction id
  */
 struct Txid_l {
   uint32_t txid[8];
 };
+
+struct BitcoinPublicKey_l {
+  uint32_t key[9]; // last byte padded with zeros.
+};
+
+struct PublicKeyHash_l {
+  uint32_t hash[5];
+};
+
 
 /* state type
  *
@@ -124,6 +137,8 @@ struct State_l {
   int32_t balance_merch;
   struct Txid_l txid_merch;
   struct Txid_l txid_escrow;
+  struct Txid_l HashPrevOuts_merch;
+  struct Txid_l HashPrevOuts_escrow;
 };
 
 /* customer's token generation function

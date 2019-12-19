@@ -239,6 +239,42 @@ void computeSHA256_4d(Integer message[4][16], Integer result[8]) {
 
 void computeDoubleSHA256_3d(Integer message[3][16], Integer result[8]) {
 
+  // initialize constants and initial hash digest value
+  Integer k[64];
+  Integer H[8];
+  Integer w[3][64];
+  // initialize message schedule
+  for (int i=0; i<3; i++) {
+    for(size_t t=0; t<16; t++) {
+      w[i][t] = message[i][t];
+    }
+  }
+
+  initSHA256(k, H);
+
+  for (int i=0; i<3; i++) {
+    computeInnerHashBlock(k, H, w[i]);
+  }
+
+  // for(int i=0; i<8; i++) {
+  //   result[i] = H[i];
+  // }
+
+  // make a new buffer for the itterated hash
+
+  Integer newmessage[1][16];
+
+  for(int i=0; i<8; i++) {
+    newmessage[0][i] = H[i];
+  }
+
+  newmessage[0][8] = Integer(32, 2147483648/*0x80000000*/, PUBLIC);
+  for(int i=9; i<15; i++) {
+    newmessage[0][i] = Integer(32, 0/*0x00000000*/, PUBLIC);
+  }
+  newmessage[0][15] = Integer(32, 256, PUBLIC);
+
+  computeSHA256_1d(newmessage, result);
 }
 
 

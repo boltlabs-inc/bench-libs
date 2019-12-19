@@ -26,6 +26,11 @@ struct RevLock_d {
   Integer revlock[8];
 };
 
+typedef struct RevLockCommitment_l RevLockCommitment_l;
+struct RevLockCommitment_d {
+  Integer commitment[8];
+};
+
 /* This is a pay token
  * Is is an HMAC computed on the state 
  * The output of HMAC is the underlying block size.  In this case 256 bits
@@ -72,6 +77,14 @@ struct Txid_d {
   Integer txid[8];
 };
 
+struct BitcoinPublicKey_d {
+  Integer key[9]; // last byte padded with zeros.
+};
+
+struct PublicKeyHash_d {
+  Integer hash[5];
+};
+
 /* state type
  *
  * \param pkC           : customer public key 
@@ -90,6 +103,8 @@ struct State_d {
   Integer balance_merch;
   Txid_d txid_merch;
   Txid_d txid_escrow;
+  Txid_d HashPrevOuts_merch;
+  Txid_d HashPrevOuts_escrow;
 };
 
 /* Commitment stuff
@@ -132,6 +147,9 @@ HMACKey_l localize_HMACKey(HMACKey_d key);
 RevLock_d distribute_RevLock(RevLock_l revlock, int party);
 RevLock_l localize_RevLock(RevLock_d revlock);
 
+RevLockCommitment_d distribute_RevLockCommitment(RevLockCommitment_l rlc, int party);
+RevLockCommitment_l localize_RevLockCommitment(RevLockCommitment_d rlc);
+
 PayToken_d distribute_PayToken(PayToken_l paytoken, int party);
 PayToken_l localize_PayToken(PayToken_d paytoken);
 
@@ -153,6 +171,9 @@ MaskCommitment_l localize_MaskCommitment(MaskCommitment_d commitment);
 Mask_d distribute_Mask(Mask_l mask, int party);
 Mask_l localize_Mask(Mask_d mask);
 
+BitcoinPublicKey_d distribute_BitcoinPublicKey(BitcoinPublicKey_l pubKey, int party);
+BitcoinPublicKey_l localize_BitcoinPublicKey(BitcoinPublicKey_d pubKey);
+
 EcdsaPartialSig_d distribute_EcdsaPartialSig(EcdsaPartialSig_l ecdsapartialsig, int party=MERCH);
 EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d ecdsapartialsig);
 // easy initialization of ecdsapartialsig
@@ -169,22 +190,29 @@ Integer makeInteger(bool *bits, int len, int intlen, int party);
  * as described in bolt.pdf
  */
 void issue_tokens(
+/* CUSTOMER INPUTS */
   State_l old_state_l,
   State_l new_state_l,
-  int32_t epsilon_l,
-  HMACKeyCommitment_l hmac_key_commitment_l,
-  HMACKey_l hmac_key_l,
   PayToken_l old_paytoken_l,
+  BitcoinPublicKey_l cust_escrow_pub_key_l,
+/* MERCHANT INPUTS */
+  HMACKey_l hmac_key_l,
   Mask_l paytoken_mask_l,
-  MaskCommitment_l paytoken_mask_commitment_l,
   Mask_l merch_mask_l,
-  MaskCommitment_l merch_mask_commitment_l,
   Mask_l escrow_mask_l,
-  MaskCommitment_l escrow_mask_commitment_l,
+  /* TODO: ECDSA Key info */
+/* PUBLIC INPUTS */
+  int64_t epsilon_l,
+  HMACKeyCommitment_l hmac_key_commitment_l,
+  MaskCommitment_l paytoken_mask_commitment_l,
+  RevLockCommitment_l rlc_l,
+  Nonce_l nonce_l,
+  BitcoinPublicKey_l merch_escrow_pub_key_l,
+/* OUTPUTS */
   EcdsaPartialSig_l sig1, 
-  bool close_tx_escrow[1024],
+  char close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
-  bool close_tx_merch[1024]
+  char close_tx_merch[1024]
   );
 
 /* SIGNATURE SCHEME
@@ -211,7 +239,7 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
  *
  * \return b 	: success bit
  */
-Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d);
+Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_d rlc_d, Nonce_d nonce_d, Integer epsilon_d);
 
 /* opens and verifies commitment to a wallet
  * e.g. checks that com == commit(w;t)
@@ -225,6 +253,7 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d)
  */
 Bit open_commitment();
 
+Bit verify_revlock_commitment(RevLock_d rl_d, RevLockCommitment_d rlc_d);
 
 Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment);
 
@@ -267,7 +296,7 @@ Bit mask_paytoken(Integer paytoken[8], Mask_d mask, MaskCommitment_d maskcommitm
  * \param[in] token : Sequence of bits representing a token
  *
  */
-Bit mask_closemerchtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment);
-Bit mask_closeescrowtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment);
+void mask_closemerchtoken(Integer token[8], Mask_d mask);
+void mask_closeescrowtoken(Integer token[8], Mask_d mask);
 
 

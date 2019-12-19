@@ -268,7 +268,7 @@ Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_esc
   customer_delayed_script_hash_preimage[1][10] = (customer_output_key.key[6] << 24) | (customer_output_key.key[7] >> 8);
   customer_delayed_script_hash_preimage[1][11] = (customer_output_key.key[7] << 8) | Integer(32, /*0x000068ac*/, PUBLIC);
 
-  customer_delayed_script_hash_preimage[1][12] = Integer(32, 2147483648/*0x80000000*/, PUBLIC); 
+  customer_delayed_script_hash_preimage[1][12] = Integer(32, -2147483648/*0x80000000*/, PUBLIC); 
   customer_delayed_script_hash_preimage[1][13] = Integer(32, 0, PUBLIC); //0x00000000; 
   customer_delayed_script_hash_preimage[1][14] = Integer(32, 0, PUBLIC); //0x00000000; 
   customer_delayed_script_hash_preimage[1][15] = Integer(32, 896, PUBLIC); 
@@ -404,7 +404,7 @@ Bit validate_transactions_local(State_d new_state_d, TxSerialized_d close_tx_esc
   total_preimage[3][5]  = Integer(32, 0 /*0x00000000*/, PUBLIC);
   total_preimage[3][6]  = Integer(32, 16777216 /*0x01000000*/, PUBLIC);
 
-  total_preimage[3][7]   = Integer(32, 2147483648/*0x80000000*/, PUBLIC); 
+  total_preimage[3][7]   = Integer(32, -2147483648/*0x80000000*/, PUBLIC); 
   total_preimage[3][8]   = Integer(32, 0, PUBLIC);
   total_preimage[3][9]   = Integer(32, 0, PUBLIC);
   total_preimage[3][10]  = Integer(32, 0, PUBLIC);

@@ -12,14 +12,25 @@ using namespace emp;
 
 // TODO: add fail bit and count up all the validations
 void issue_tokens(
+/* CUSTOMER INPUTS */
   State_l old_state_l,
   State_l new_state_l,
+  PayToken_l old_paytoken_l,
+  BitcoinPublicKey_l cust_escrow_pub_key_l,
+/* MERCHANT INPUTS */
+  HMACKey_l hmac_key_l,
+  Mask_l paytoken_mask_l,
+  Mask_l merch_mask_l,
+  Mask_l escrow_mask_l,
+  /* TODO: ECDSA Key info */
+/* PUBLIC INPUTS */
   int64_t epsilon_l,
   HMACKeyCommitment_l hmac_key_commitment_l,
-  HMACKey_l hmac_key_l,
-  PayToken_l old_paytoken_l,
-  Mask_l paytoken_mask_l,
   MaskCommitment_l paytoken_mask_commitment_l,
+  RevLockCommitment_l rlc_l,
+  Nonce_l nonce_l,
+  BitcoinPublicKey_l merch_escrow_pub_key_l,
+/* OUTPUTS */
   EcdsaPartialSig_l sig1, 
   char close_tx_escrow[1024],
   EcdsaPartialSig_l sig2, 
@@ -28,28 +39,26 @@ void issue_tokens(
 
   State_d old_state_d = distribute_State(old_state_l, CUST);
   State_d new_state_d = distribute_State(new_state_l, CUST);
-
-  Integer epsilon_d(32, epsilon_l, PUBLIC);
-
-  HMACKeyCommitment_d hmac_key_commitment_d = distribute_HMACKeyCommitment(hmac_key_commitment_l, PUBLIC);
-  HMACKey_d hmac_key_d = distribute_HMACKey(hmac_key_l, MERCH);
-
   PayToken_d old_paytoken_d = distribute_PayToken(old_paytoken_l, CUST);
+  BitcoinPublicKey_d cust_escrow_pub_key_d = distribute_BitcoinPublicKey(cust_escrow_pub_key_l, CUST);
 
+  HMACKey_d hmac_key_d = distribute_HMACKey(hmac_key_l, MERCH);
   Mask_d paytoken_mask_d = distribute_Mask(paytoken_mask_l, MERCH);
-  MaskCommitment_d paytoken_mask_commitment_d = distribute_MaskCommitment(paytoken_mask_commitment_l, PUBLIC);
-
   Mask_d merch_mask_d = distribute_Mask(merch_mask_l, MERCH);
-  MaskCommitment_d merch_mask_commitment_d = distribute_MaskCommitment(merch_mask_commitment_l, PUBLIC);
-
   Mask_d escrow_mask_d = distribute_Mask(escrow_mask_l, MERCH);
-  MaskCommitment_d escrow_mask_commitment_d = distribute_MaskCommitment(escrow_mask_commitment_l, PUBLIC);
+
+  Integer epsilon_d(32, epsilon_l, PUBLIC); // IVE BEEN TREATING THIS LIKE A 32 BIT VALUE, BUT ITS 64
+  HMACKeyCommitment_d hmac_key_commitment_d = distribute_HMACKeyCommitment(hmac_key_commitment_l, PUBLIC);
+  MaskCommitment_d paytoken_mask_commitment_d = distribute_MaskCommitment(paytoken_mask_commitment_l, PUBLIC);
+  RevLockCommitment_d rlc_d = distribute_RevLockCommitment(rlc_l, PUBLIC);
+  Nonce_d nonce_d = distribute_Nonce(nonce_l, PUBLIC);
+  BitcoinPublicKey_d merch_escrow_pub_key_d = distribute_BitcoinPublicKey(merch_escrow_pub_key_l, PUBLIC);
 
   // check old pay token
   Bit b = verify_token_sig(hmac_key_commitment_d, hmac_key_d, old_state_d, old_paytoken_d);
 
   // make sure wallets are well-formed
-  b = (b | compare_wallets(old_state_d, new_state_d, epsilon_d));
+  b = (b | compare_wallets(old_state_d, new_state_d, rlc_d, nonce_d, epsilon_d));
   
   // todo: remove this
   // make sure customer committed to this new wallet
@@ -58,6 +67,8 @@ void issue_tokens(
 
   // make sure new close transactions are well-formed
   b = (b | validate_transactions(new_state_d, close_tx_escrow_d, close_tx_merch_d));
+
+  // we should return into these txserialized_d or hash 
 
   // sign new close transactions 
   Integer signed_merch_tx = ecdsa_sign(close_tx_escrow, sig1);
@@ -72,9 +83,9 @@ void issue_tokens(
 
   // mask pay and close tokens
   b = ( b | mask_paytoken(new_paytoken_d.paytoken, paytoken_mask_d, paytoken_mask_commitment_d)); // pay token 
-  // NO NEED TO COMMIT AND CHECK TO THESE
-  b = ( b | mask_closemerchtoken(signed_merch_tx_parsed, merch_mask_d, merch_mask_commitment_d)); // close token - merchant close 
-  b = ( b | mask_closeescrowtoken(signed_escrow_tx_parsed, escrow_mask_d, escrow_mask_commitment_d)); // close token - escrow close 
+
+  mask_closemerchtoken(signed_merch_tx_parsed, merch_mask_d); // close token - merchant close 
+  mask_closeescrowtoken(signed_escrow_tx_parsed, escrow_mask_d); // close token - escrow close 
 
   // ...return masked tokens
   // If b = 1, we need to return nothing of value.  Otherwise we need to return all 1's or something.
@@ -125,13 +136,39 @@ void build_masked_tokens_cust(
   HMACKey_l hmac_key_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
+  RevLockCommitment_l rlc_l;
   Mask_l merch_mask_l;
-  MaskCommitment_l merch_mask_commitment_l;
   Mask_l escrow_mask_l;
-  MaskCommitment_l escrow_mask_commitment_l;
   EcdsaPartialSig_l dummy_sig;
+  BitcoinPublicKey_l cust_escrow_pub_key_l;
+  BitcoinPublicKey_l merch_escrow_pub_key_l;
+  Nonce_l nonce_l;
 
-  issue_tokens(w_old, w_new, amount, key_com, hmac_key_l, pt_old, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, dummy_sig, close_tx_escrow, dummy_sig, close_tx_merch);
+issue_tokens(
+/* CUSTOMER INPUTS */
+  w_old,
+  w_new,
+  pt_old,
+  cust_escrow_pub_key_l,
+/* MERCHANT INPUTS */
+  hmac_key_l,
+  paytoken_mask_l,
+  merch_mask_l,
+  escrow_mask_l,
+  /* TODO: ECDSA Key info */
+/* PUBLIC INPUTS */
+  amount,
+  key_com,
+  paytoken_mask_commitment_l,
+  rlc_l,
+  nonce_l,
+  merch_escrow_pub_key_l,
+/* OUTPUTS */
+  dummy_sig,
+  close_tx_escrow,
+  dummy_sig,
+  close_tx_merch
+  );
 
   delete io;
 }
@@ -178,12 +215,38 @@ void build_masked_tokens_merch(
   PayToken_l old_paytoken_l;
   Mask_l paytoken_mask_l;
   MaskCommitment_l paytoken_mask_commitment_l;
+  RevLockCommitment_l rlc_l;
   Mask_l merch_mask_l;
-  MaskCommitment_l merch_mask_commitment_l;
   Mask_l escrow_mask_l;
-  MaskCommitment_l escrow_mask_commitment_l;
+  BitcoinPublicKey_l cust_escrow_pub_key_l;
+  BitcoinPublicKey_l merch_escrow_pub_key_l;
+  Nonce_l nonce_l;
 
-  issue_tokens(old_state_l, new_state_l, amount, key_com, hmac_key, old_paytoken_l, paytoken_mask_l, paytoken_mask_commitment_l, merch_mask_l, merch_mask_commitment_l, escrow_mask_l, escrow_mask_commitment_l, sig1, dummy_tx, sig2, dummy_tx);
+issue_tokens(
+/* CUSTOMER INPUTS */
+  old_state_l,
+  new_state_l,
+  old_paytoken_l,
+  cust_escrow_pub_key_l,
+/* MERCHANT INPUTS */
+  hmac_key,
+  paytoken_mask_l,
+  merch_mask_l,
+  escrow_mask_l,
+  /* TODO: ECDSA Key info */
+/* PUBLIC INPUTS */
+  amount,
+  key_com,
+  paytoken_mask_commitment_l,
+  rlc_l,
+  nonce_l,
+  merch_escrow_pub_key_l,
+/* OUTPUTS */
+  sig1,
+  dummy_tx,
+  sig2,
+  dummy_tx
+  );
 
   delete io;
 }
@@ -280,7 +343,7 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
 }
 
 // make sure wallets are well-formed
-Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d) {
+Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_d rlc_d, Nonce_d nonce_d, Integer epsilon_d) {
 
   //Make sure the fields are all correct
   Bit b; // TODO initialize to 0
@@ -295,15 +358,26 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d)
      b = b | not_equal;
   }
 
-  b = (b | new_state_d.balance_merch.equal(old_state_d.balance_merch + epsilon_d));
-  b = (b | new_state_d.balance_cust.equal(old_state_d.balance_cust - epsilon_d));
+  b = (b | (!new_state_d.balance_merch.equal(old_state_d.balance_merch + epsilon_d)));
+  b = (b | (!new_state_d.balance_cust.equal(old_state_d.balance_cust - epsilon_d)));
+
 
   // ZERO CHECK
-    // Make sure both Custom and Merch are going to be nonzero balances after epsilon
+  // Make sure both Custom and Merch are going to be nonzero balances after epsilon
+  Integer zero(32, 0, PUBLIC);
 
-  // Also need to check that the revealed nonce matches the old state
+  b = (b | (!new_state_d.balance_merch.geq(zero)));
+  b = (b | (!new_state_d.balance_cust.geq(zero)));
 
-  // Check that we have the right RL_i is old state and that it opens to the public input commitment
+  // nonce_d has to match the nonce in old state
+
+  b = (b | (!old_state_d.nonce.nonce[0].equal(nonce_d.nonce[0])));
+  b = (b | (!old_state_d.nonce.nonce[1].equal(nonce_d.nonce[2])));
+  b = (b | (!old_state_d.nonce.nonce[3].equal(nonce_d.nonce[3])));
+
+  // check that the rlc is a commitment to the rl in old_state
+
+  b = (b | verify_revlock_commitment(old_state_d.rl, rlc_d));
 
   return b;
 }
@@ -311,6 +385,37 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, Integer epsilon_d)
 // make sure customer committed to this new wallet
 Bit open_commitment() {
   Bit b;
+  return b;
+}
+
+Bit verify_revlock_commitment(RevLock_d rl_d, RevLockCommitment_d rlc_d) {
+  Bit b;  // TODO initialize to 0
+
+  Integer message[1][16];
+
+  for(int i=0; i<8; i++) {
+    message[0][i] = rl_d.revlock[i];
+  }
+
+  message[0][8] = Integer(32, -2147483648, PUBLIC); //0x80000000;
+  message[0][9] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][10] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][11] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][12] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][13] = Integer(32, 0, PUBLIC); //0x00000000;
+
+  // Message length 
+  message[0][14] = Integer(32, 0, PUBLIC); //0x00000000;
+  message[0][15] = Integer(32, 256, PUBLIC);
+
+  Integer hashresult[8];
+
+  computeSHA256_1d(message, hashresult);
+
+  for(int i=0; i<8; i++) {
+     Bit not_equal = !(rlc_d.commitment[i].equal(hashresult[i]));
+     b = b | not_equal;
+  }
   return b;
 }
 
@@ -379,32 +484,23 @@ Bit mask_paytoken(Integer paytoken[8], Mask_d mask, MaskCommitment_d maskcommitm
   return b;
 }
 
-Bit mask_closemerchtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment) {
+void mask_closemerchtoken(Integer token[8], Mask_d mask) {
 
-  // The pay token is 256 bits long.
+  // The sig is 256 bits long.
   // Thus the mask is 256 bits long.
-  // First we check to see if the mask was correct
-  
-  Bit b = verify_mask_commitment(mask, maskcommitment);
 
   for(int i=0; i<8; i++) {
     token[i] = token[i] ^ mask.mask[i];
   }
 
-  return b;
 }
 
-Bit mask_closeescrowtoken(Integer token[8], Mask_d mask, MaskCommitment_d maskcommitment){
+void mask_closeescrowtoken(Integer token[8], Mask_d mask){
 
-  // The pay token is 256 bits long.
+  // The sig is 256 bits long.
   // Thus the mask is 256 bits long.
-  // First we check to see if the mask was correct
-  
-  Bit b = verify_mask_commitment(mask, maskcommitment);
 
   for(int i=0; i<8; i++) {
     token[i] = token[i] ^ mask.mask[i];
   }
-
-  return b;
 }
