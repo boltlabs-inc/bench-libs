@@ -92,7 +92,7 @@ struct EcdsaPartialSig_l {
  * RIGHT NOW THIS THING IS 96 BITS.  WE MAY WANT TO INCREASE ITS LENGTH IN THE FUTURE!!!
  */
 struct Nonce_l {
-  uint32_t nonce[3];
+  uint32_t nonce[4];
 };
 /* Revocation lock - TYPISSUE: not sure what type this is yet.
  * Tentatively sized to use a hash (SHA256-based) commitment scheme.
@@ -120,6 +120,9 @@ struct PublicKeyHash_l {
   uint32_t hash[5];
 };
 
+struct Balance_l {
+  uint32_t balance[2];
+};
 
 /* state type
  *
@@ -133,8 +136,8 @@ struct PublicKeyHash_l {
 struct State_l {
   struct Nonce_l nonce;
   struct RevLock_l rl;
-  int32_t balance_cust;
-  int32_t balance_merch;
+  struct Balance_l balance_cust;
+  struct Balance_l balance_merch;
   struct Txid_l txid_merch;
   struct Txid_l txid_escrow;
   struct Txid_l HashPrevOuts_merch;

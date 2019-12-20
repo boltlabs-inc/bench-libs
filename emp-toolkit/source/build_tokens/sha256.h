@@ -77,6 +77,7 @@ void computeSHA256_1d(Integer message[1][16], Integer result[8]);
 void computeSHA256_2d(Integer message[2][16], Integer result[8]);
 void computeSHA256_3d(Integer message[3][16], Integer result[8]);
 void computeSHA256_4d(Integer message[4][16], Integer result[8]);
+void computeSHA256_5d(Integer message[5][16], Integer result[8]);
 
 void computeDoubleSHA256_3d(Integer message[3][16], Integer result[8]);
 

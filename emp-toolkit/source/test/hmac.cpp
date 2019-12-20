@@ -77,12 +77,12 @@ $ xxd /tmp/msg
 00000080: 6a76 747a 7969 6976 6871 7468 6776 706e  jvtzyiivhqthgvpn
 00000090: 657a 6a67 6678 6466 6376 7075 7779 7466  ezjgfxdfcvpuwytf
 000000a0: 6d6c 7572 7773 6468 6964 686f 7364 616c  mlurwsdhidhosdal
-000000b0: 7469 6872                                tihr
+000000b0: 7469 6872 6c63 7865 6d61 7269 7a64 686d  tihrlcxemarizdhm
 
 $ openssl dgst -sha256 -hmac $(cat /tmp/key) -hex /tmp/msg 
 HMAC-SHA256(/tmp/msg)= af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b782cc99bb
 // LONGER MESSAGE OUTPUT
-HMAC-SHA256(/tmp/msg)= 66498fdd9d5b6bd16f71cf3ffe8d37c2d34c8979faad1567bd148158840b7d54
+HMAC-SHA256(/tmp/msg)= fce631fb9384749b2c269b2390b9656080675782c0a14d828414029d07fe7930
 */
 
 // The msgs we are signing are 116 bytes long, or 29 ints long
@@ -103,7 +103,7 @@ void test_end_to_end() {
   CryptoPP::SecByteBlock key(test_key_bytes, 64);
 
   // string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkz";
-  string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkzrizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihr";
+  string msg = "dcjbpwfmywofsljyauczmtglowybtdlcxemarizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrbwsinzvgsvxyhdkzrizdhmkzjpzsjvtzyiivhqthgvpnezjgfxdfcvpuwytfmlurwsdhidhosdaltihrlcxemarizdhm";
   
   string expected = reference_HMAC_sign(key, msg);
   string actual = run_secure_HMACsign(test_key, msg);
@@ -113,13 +113,13 @@ void test_end_to_end() {
 
   assert ( expected.compare(actual) == 0);
   // assert ( expected.compare("af4e2daca29f7c6e68d6a0d536eec5a96527650a59506eea815062b782cc99bb") == 0 );
-  assert ( expected.compare("66498fdd9d5b6bd16f71cf3ffe8d37c2d34c8979faad1567bd148158840b7d54") == 0 );
+  assert ( expected.compare("fce631fb9384749b2c269b2390b9656080675782c0a14d828414029d07fe7930") == 0 );
 
   // randomized tests of 116 messages
   for (int i=0; i < 100; i++) {
 
     // TODO GENERATE RANDOM KEYS
-    msg = gen_random(180);
+    msg = gen_random(192);
     string expected = reference_HMAC_sign(key, msg);
     string actual = run_secure_HMACsign(test_key, msg);
 
@@ -168,7 +168,6 @@ string reference_HMAC_sign(CryptoPP::SecByteBlock key, string msg) {
 // test hmac implementation 
 string run_secure_HMACsign(string key, string msg) {
 
-  //TODO A LOT OF THIS IS WRONG 
   string hex_key;
 
   CryptoPP::StringSource foo(key, true,
@@ -192,39 +191,43 @@ string run_secure_HMACsign(string key, string msg) {
 
   State_l state_l;
 
-  for(int i=0; i<3; i++) {
+  for(int i=0; i<4; i++) {
     temp = hex_msg.substr(i*8, 8);
     state_l.nonce.nonce[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   }
 
   for(int i=0; i<8; i++) {
-    temp = hex_msg.substr((i+3)*8, 8);
+    temp = hex_msg.substr((i+4)*8, 8);
     state_l.rl.revlock[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   }
 
-  temp = hex_msg.substr((11)*8, 8);
-  state_l.balance_cust = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  for(int i=0; i<2; i++) {
+    temp = hex_msg.substr((i+12)*8, 8);
+    state_l.balance_cust.balance[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
 
-  temp = hex_msg.substr((12)*8, 8);
-  state_l.balance_merch = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  for(int i=0; i<2; i++) {
+    temp = hex_msg.substr((i+14)*8, 8);
+    state_l.balance_merch.balance[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
+  }
 
   for(int i=0; i<8; i++) {
-    temp = hex_msg.substr((i+13)*8, 8);
+    temp = hex_msg.substr((i+16)*8, 8);
     state_l.txid_merch.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   }
 
   for(int i=0; i<8; i++) {
-    temp = hex_msg.substr((i+21)*8, 8);
+    temp = hex_msg.substr((i+24)*8, 8);
     state_l.txid_escrow.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   } 
 
   for(int i=0; i<8; i++) {
-    temp = hex_msg.substr((i+29)*8, 8);
+    temp = hex_msg.substr((i+32)*8, 8);
     state_l.HashPrevOuts_merch.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   }
 
   for(int i=0; i<8; i++) {
-    temp = hex_msg.substr((i+37)*8, 8);
+    temp = hex_msg.substr((i+40)*8, 8);
     state_l.HashPrevOuts_escrow.txid[i] = (uint32_t) strtoul(temp.c_str(), NULL, 16);
   } 
 

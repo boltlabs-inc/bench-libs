@@ -105,6 +105,7 @@ Nonce_d distribute_Nonce(Nonce_l nonce, int party)  {
   to_return.nonce[0] = Integer(32, nonce.nonce[0], party);
   to_return.nonce[1] = Integer(32, nonce.nonce[1], party);
   to_return.nonce[2] = Integer(32, nonce.nonce[2], party);
+  to_return.nonce[3] = Integer(32, nonce.nonce[3], party);
 
   return to_return;
 }
@@ -144,8 +145,9 @@ State_d distribute_State(State_l state, int party) {
 
   to_return.nonce = distribute_Nonce(state.nonce, party);
   to_return.rl = distribute_RevLock(state.rl, party);
-  to_return.balance_cust = Integer(32, state.balance_cust, party);
-  to_return.balance_merch = Integer(32, state.balance_merch, party);
+
+  to_return.balance_cust = distribute_Balance(state.balance_cust, party);
+  to_return.balance_merch = distribute_Balance(state.balance_merch, party);
 
   to_return.txid_merch = distribute_Txid(state.txid_merch, party);
   to_return.txid_escrow = distribute_Txid(state.txid_escrow, party);
@@ -211,6 +213,38 @@ MaskCommitment_l localize_MaskCommitment(MaskCommitment_d commitment) {
   return to_return;
 }
 
+PublicKeyHash_d distribute_PublicKeyHash(PublicKeyHash_l hash, int party) {
+  PublicKeyHash_d to_return;
+
+  to_return.hash[0] = Integer(32, hash.hash[0], party);
+  to_return.hash[1] = Integer(32, hash.hash[1], party);
+  to_return.hash[2] = Integer(32, hash.hash[2], party);
+  to_return.hash[3] = Integer(32, hash.hash[3], party);
+  to_return.hash[4] = Integer(32, hash.hash[4], party);
+
+  return to_return;
+}
+
+PublicKeyHash_l localize_PublicKeyHash(PublicKeyHash_d hash) {
+  PublicKeyHash_l to_return;
+
+  return to_return;
+}
+
+Balance_d distribute_Balance(Balance_l balance, int party) {
+  Balance_d to_return;
+
+  to_return.balance[0] = Integer(32, balance.balance[0], party);
+  to_return.balance[1] = Integer(32, balance.balance[1], party);
+
+  return to_return;
+}
+
+Balance_l localize_Balance(Balance_d balance) {
+  Balance_l to_return;
+
+  return to_return;
+}
 
 Mask_d distribute_Mask(Mask_l mask, int party) {
 

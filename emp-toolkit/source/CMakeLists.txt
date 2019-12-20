@@ -40,5 +40,6 @@ endmacro()
 add_test (sha256)
 add_test (ecdsa)
 add_test (hmac)
+add_test (bitcoin)
 
 

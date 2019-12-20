@@ -17,6 +17,7 @@ void issue_tokens(
   State_l new_state_l,
   PayToken_l old_paytoken_l,
   BitcoinPublicKey_l cust_escrow_pub_key_l,
+  BitcoinPublicKey_l cust_payout_pub_key_l,
 /* MERCHANT INPUTS */
   HMACKey_l hmac_key_l,
   Mask_l paytoken_mask_l,
@@ -24,12 +25,14 @@ void issue_tokens(
   Mask_l escrow_mask_l,
   /* TODO: ECDSA Key info */
 /* PUBLIC INPUTS */
-  int64_t epsilon_l,
+  Balance_l epsilon_l,
   HMACKeyCommitment_l hmac_key_commitment_l,
   MaskCommitment_l paytoken_mask_commitment_l,
   RevLockCommitment_l rlc_l,
   Nonce_l nonce_l,
   BitcoinPublicKey_l merch_escrow_pub_key_l,
+  BitcoinPublicKey_l merch_dispute_key_l, 
+  PublicKeyHash_l merch_publickey_hash_l,
 /* OUTPUTS */
   EcdsaPartialSig_l sig1, 
   char close_tx_escrow[1024],
@@ -41,18 +44,22 @@ void issue_tokens(
   State_d new_state_d = distribute_State(new_state_l, CUST);
   PayToken_d old_paytoken_d = distribute_PayToken(old_paytoken_l, CUST);
   BitcoinPublicKey_d cust_escrow_pub_key_d = distribute_BitcoinPublicKey(cust_escrow_pub_key_l, CUST);
+  BitcoinPublicKey_d cust_payout_pub_key_d = distribute_BitcoinPublicKey(cust_payout_pub_key_l, CUST);
 
   HMACKey_d hmac_key_d = distribute_HMACKey(hmac_key_l, MERCH);
   Mask_d paytoken_mask_d = distribute_Mask(paytoken_mask_l, MERCH);
   Mask_d merch_mask_d = distribute_Mask(merch_mask_l, MERCH);
   Mask_d escrow_mask_d = distribute_Mask(escrow_mask_l, MERCH);
 
-  Integer epsilon_d(32, epsilon_l, PUBLIC); // IVE BEEN TREATING THIS LIKE A 32 BIT VALUE, BUT ITS 64
+  Balance_d epsilon_d = distribute_Balance(epsilon_l, PUBLIC); // IVE BEEN TREATING THIS LIKE A 32 BIT VALUE, BUT ITS 64
   HMACKeyCommitment_d hmac_key_commitment_d = distribute_HMACKeyCommitment(hmac_key_commitment_l, PUBLIC);
   MaskCommitment_d paytoken_mask_commitment_d = distribute_MaskCommitment(paytoken_mask_commitment_l, PUBLIC);
   RevLockCommitment_d rlc_d = distribute_RevLockCommitment(rlc_l, PUBLIC);
   Nonce_d nonce_d = distribute_Nonce(nonce_l, PUBLIC);
   BitcoinPublicKey_d merch_escrow_pub_key_d = distribute_BitcoinPublicKey(merch_escrow_pub_key_l, PUBLIC);
+  BitcoinPublicKey_d merch_dispute_key_d = distribute_BitcoinPublicKey(merch_dispute_key_l, PUBLIC);
+  PublicKeyHash_d merch_publickey_hash_d = distribute_PublicKeyHash(merch_publickey_hash_l, PUBLIC);
+
 
   // check old pay token
   Bit b = verify_token_sig(hmac_key_commitment_d, hmac_key_d, old_state_d, old_paytoken_d);
@@ -62,11 +69,13 @@ void issue_tokens(
   
   // todo: remove this
   // make sure customer committed to this new wallet
-  TxSerialized_d close_tx_escrow_d;
-  TxSerialized_d close_tx_merch_d;
+  Integer escrow_digest[8];
 
   // make sure new close transactions are well-formed
-  b = (b | validate_transactions(new_state_d, close_tx_escrow_d, close_tx_merch_d));
+  validate_transactions(new_state_d, 
+    cust_escrow_pub_key_d, cust_payout_pub_key_d,
+    merch_escrow_pub_key_d, merch_dispute_key_d, merch_publickey_hash_d,
+    escrow_digest);
 
   // we should return into these txserialized_d or hash 
 
@@ -143,6 +152,10 @@ void build_masked_tokens_cust(
   BitcoinPublicKey_l cust_escrow_pub_key_l;
   BitcoinPublicKey_l merch_escrow_pub_key_l;
   Nonce_l nonce_l;
+  BitcoinPublicKey_l merch_dispute_key_l;
+  PublicKeyHash_l merch_publickey_hash;
+  Balance_l epsilon_l;
+  BitcoinPublicKey_l cust_payout_pub_key_l;
 
 issue_tokens(
 /* CUSTOMER INPUTS */
@@ -150,6 +163,7 @@ issue_tokens(
   w_new,
   pt_old,
   cust_escrow_pub_key_l,
+  cust_payout_pub_key_l,
 /* MERCHANT INPUTS */
   hmac_key_l,
   paytoken_mask_l,
@@ -157,12 +171,14 @@ issue_tokens(
   escrow_mask_l,
   /* TODO: ECDSA Key info */
 /* PUBLIC INPUTS */
-  amount,
+  epsilon_l,
   key_com,
   paytoken_mask_commitment_l,
   rlc_l,
   nonce_l,
   merch_escrow_pub_key_l,
+  merch_dispute_key_l, 
+  merch_publickey_hash,
 /* OUTPUTS */
   dummy_sig,
   close_tx_escrow,
@@ -221,6 +237,10 @@ void build_masked_tokens_merch(
   BitcoinPublicKey_l cust_escrow_pub_key_l;
   BitcoinPublicKey_l merch_escrow_pub_key_l;
   Nonce_l nonce_l;
+  BitcoinPublicKey_l merch_dispute_key_l;
+  PublicKeyHash_l merch_publickey_hash;
+  Balance_l epsilon_l;
+  BitcoinPublicKey_l cust_payout_pub_key_l;
 
 issue_tokens(
 /* CUSTOMER INPUTS */
@@ -228,6 +248,7 @@ issue_tokens(
   new_state_l,
   old_paytoken_l,
   cust_escrow_pub_key_l,
+  cust_payout_pub_key_l,
 /* MERCHANT INPUTS */
   hmac_key,
   paytoken_mask_l,
@@ -235,12 +256,14 @@ issue_tokens(
   escrow_mask_l,
   /* TODO: ECDSA Key info */
 /* PUBLIC INPUTS */
-  amount,
+  epsilon_l,
   key_com,
   paytoken_mask_commitment_l,
   rlc_l,
   nonce_l,
   merch_escrow_pub_key_l,
+  merch_dispute_key_l, 
+  merch_publickey_hash,
 /* OUTPUTS */
   sig1,
   dummy_tx,
@@ -343,7 +366,7 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
 }
 
 // make sure wallets are well-formed
-Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_d rlc_d, Nonce_d nonce_d, Integer epsilon_d) {
+Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_d rlc_d, Nonce_d nonce_d, Balance_d epsilon_d) {
 
   //Make sure the fields are all correct
   Bit b; // TODO initialize to 0
@@ -358,21 +381,26 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_
      b = b | not_equal;
   }
 
-  b = (b | (!new_state_d.balance_merch.equal(old_state_d.balance_merch + epsilon_d)));
-  b = (b | (!new_state_d.balance_cust.equal(old_state_d.balance_cust - epsilon_d)));
+  // Transform balances into Integer64_t
+  // Integer epsilon_d_local = 
+  // TODO THIS IS VERY VERY BROKEN!!!
+  // Need to know how to compare and do math on balances
+  b = (b | (!new_state_d.balance_merch.balance[0].equal(old_state_d.balance_merch.balance[0] + epsilon_d.balance[0])));
+  b = (b | (!new_state_d.balance_cust.balance[0].equal(old_state_d.balance_cust.balance[0] - epsilon_d.balance[0])));
 
 
   // ZERO CHECK
   // Make sure both Custom and Merch are going to be nonzero balances after epsilon
   Integer zero(32, 0, PUBLIC);
 
-  b = (b | (!new_state_d.balance_merch.geq(zero)));
-  b = (b | (!new_state_d.balance_cust.geq(zero)));
+  b = (b | (!new_state_d.balance_merch.balance[0].geq(zero)));
+  b = (b | (!new_state_d.balance_cust.balance[0].geq(zero)));
 
   // nonce_d has to match the nonce in old state
 
   b = (b | (!old_state_d.nonce.nonce[0].equal(nonce_d.nonce[0])));
-  b = (b | (!old_state_d.nonce.nonce[1].equal(nonce_d.nonce[2])));
+  b = (b | (!old_state_d.nonce.nonce[1].equal(nonce_d.nonce[1])));
+  b = (b | (!old_state_d.nonce.nonce[2].equal(nonce_d.nonce[2])));
   b = (b | (!old_state_d.nonce.nonce[3].equal(nonce_d.nonce[3])));
 
   // check that the rlc is a commitment to the rl in old_state
@@ -451,21 +479,13 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment) {
 }
 
 // make sure new close transactions are well-formed
-Bit validate_transactions(State_d new_state_d, TxSerialized_d close_tx_escrow_d, TxSerialized_d close_tx_merch_d) {
-  Bit b;
+void validate_transactions(State_d new_state_d, 
+  BitcoinPublicKey_d cust_escrow_pub_key_d, BitcoinPublicKey_d cust_payout_pub_key_d,
+  BitcoinPublicKey_d merch_escrow_pub_key_d, BitcoinPublicKey_d merch_dispute_key_d, PublicKeyHash_d merch_publickey_hash_d,
+  Integer escrow_digest[8])
+{
 
-/* validates closing transactions against a wallet
- * for each transaction:
- * 0. check that balances are correct
- * 1. check that wallet key is integrated correctly
- * 2. check that source is correct
- *    for close_tx_merch, source is txid_merch
- *    for close_tx_escrow, source is txid_escrow
- *
- * \return b  : success bit
- */
 
-  return b;
 }
 
 // mask pay and close tokens
