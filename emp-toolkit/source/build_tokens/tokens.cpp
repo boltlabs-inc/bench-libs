@@ -67,11 +67,10 @@ void issue_tokens(
   // make sure wallets are well-formed
   b = (b | compare_wallets(old_state_d, new_state_d, rlc_d, nonce_d, epsilon_d));
   
-  // todo: remove this
   // make sure customer committed to this new wallet
   Integer escrow_digest[8];
 
-  // make sure new close transactions are well-formed
+  // generate the hash of the properly formed transacation
   validate_transactions(new_state_d, 
     cust_escrow_pub_key_d, cust_payout_pub_key_d,
     merch_escrow_pub_key_d, merch_dispute_key_d, merch_publickey_hash_d,
@@ -484,8 +483,197 @@ void validate_transactions(State_d new_state_d,
   BitcoinPublicKey_d merch_escrow_pub_key_d, BitcoinPublicKey_d merch_dispute_key_d, PublicKeyHash_d merch_publickey_hash_d,
   Integer escrow_digest[8])
 {
+  // 112 bytes --> 896
+  Integer customer_delayed_script_hash_preimage[2][16];
 
+  // OPCODE || 1 byte of Rev Lock  0x63a82000  1671962624
+  customer_delayed_script_hash_preimage[0][0] = Integer(32, 1671962624 /*0x63a92000*/, PUBLIC) | /* First byte of revlock*/(new_state_d.rl.revlock[0] >> 24);
 
+  // 31 remaining bytes of Rev Lock
+  customer_delayed_script_hash_preimage[0][1] = (/* last 3 bytes */ new_state_d.rl.revlock[0] << 8) | ( /* first byte of the next int */ new_state_d.rl.revlock[1] >> 24);
+  customer_delayed_script_hash_preimage[0][2] = (new_state_d.rl.revlock[1] << 8) | (new_state_d.rl.revlock[2] >> 24);
+  customer_delayed_script_hash_preimage[0][3] = (new_state_d.rl.revlock[2] << 8) | (new_state_d.rl.revlock[3] >> 24);
+  customer_delayed_script_hash_preimage[0][4] = (new_state_d.rl.revlock[3] << 8) | (new_state_d.rl.revlock[4] >> 24);
+  customer_delayed_script_hash_preimage[0][5] = (new_state_d.rl.revlock[4] << 8) | (new_state_d.rl.revlock[5] >> 24);
+  customer_delayed_script_hash_preimage[0][6] = (new_state_d.rl.revlock[5] << 8) | (new_state_d.rl.revlock[6] >> 24);
+  customer_delayed_script_hash_preimage[0][7] = (new_state_d.rl.revlock[6] << 8) | (new_state_d.rl.revlock[7] >> 24);
+  customer_delayed_script_hash_preimage[0][8] = (new_state_d.rl.revlock[7] << 8) | Integer(32, 136 /*0x00000088*/, PUBLIC);
+
+  customer_delayed_script_hash_preimage[0][9]  = Integer(32, 553648128, PUBLIC) | merch_dispute_key_d.key[0] >> 8; //0x21000000 // taking 3 bytes from the key
+  customer_delayed_script_hash_preimage[0][10] = (merch_dispute_key_d.key[0] << 24) | (merch_dispute_key_d.key[1] >> 8); // byte 4-7
+  customer_delayed_script_hash_preimage[0][11] = (merch_dispute_key_d.key[1] << 24) | (merch_dispute_key_d.key[2] >> 8); // byte 8-11
+  customer_delayed_script_hash_preimage[0][12] = (merch_dispute_key_d.key[2] << 24) | (merch_dispute_key_d.key[3] >> 8); // bytes 12-15
+  customer_delayed_script_hash_preimage[0][13] = (merch_dispute_key_d.key[3] << 24) | (merch_dispute_key_d.key[4] >> 8); // bytes 16-19
+  customer_delayed_script_hash_preimage[0][14] = (merch_dispute_key_d.key[4] << 24) | (merch_dispute_key_d.key[5] >> 8); // bytes 20-23
+  customer_delayed_script_hash_preimage[0][15] = (merch_dispute_key_d.key[5] << 24) | (merch_dispute_key_d.key[6] >> 8); // bytes 24-27
+  customer_delayed_script_hash_preimage[1][0]  = (merch_dispute_key_d.key[6] << 24) | (merch_dispute_key_d.key[7] >> 8); // bytes 28-31
+  customer_delayed_script_hash_preimage[1][1]  = (merch_dispute_key_d.key[7] << 24) | (merch_dispute_key_d.key[8] >> 8) | Integer(32, 26368/*0x00006700*/, PUBLIC) | Integer(32,2 /*0x000002*/, PUBLIC); // bytes 32-33 // 0x67
+
+  // This previous last byte and the following to bytes is the delay.  We should talk about how long we want them to be
+  customer_delayed_script_hash_preimage[1][2]  = Integer(32, 3473211392 /*0xcf050000*/, PUBLIC) | Integer(32, 45685/*0x0000b275*/, PUBLIC);
+  customer_delayed_script_hash_preimage[1][3]  = Integer(32, 553648128 /*0x21000000*/, PUBLIC)  | (cust_payout_pub_key_d.key[0] >> 8);
+  customer_delayed_script_hash_preimage[1][4]  = (cust_payout_pub_key_d.key[0] << 24) | (cust_payout_pub_key_d.key[1] >> 8);
+  customer_delayed_script_hash_preimage[1][5]  = (cust_payout_pub_key_d.key[1] << 24) | (cust_payout_pub_key_d.key[2] >> 8);
+  customer_delayed_script_hash_preimage[1][6]  = (cust_payout_pub_key_d.key[2] << 24) | (cust_payout_pub_key_d.key[3] >> 8);
+  customer_delayed_script_hash_preimage[1][7]  = (cust_payout_pub_key_d.key[3] << 24) | (cust_payout_pub_key_d.key[4] >> 8);
+  customer_delayed_script_hash_preimage[1][8]  = (cust_payout_pub_key_d.key[4] << 24) | (cust_payout_pub_key_d.key[5] >> 8);
+  customer_delayed_script_hash_preimage[1][9]  = (cust_payout_pub_key_d.key[5] << 24) | (cust_payout_pub_key_d.key[6] >> 8);
+  customer_delayed_script_hash_preimage[1][10] = (cust_payout_pub_key_d.key[6] << 24) | (cust_payout_pub_key_d.key[7] >> 8);
+  customer_delayed_script_hash_preimage[1][11] = (cust_payout_pub_key_d.key[7] << 24) | (cust_payout_pub_key_d.key[8] >> 8) | Integer(32, 26796/*0x000068ac*/, PUBLIC);
+
+  customer_delayed_script_hash_preimage[1][12] = Integer(32, -2147483648/*0x80000000*/, PUBLIC); 
+  customer_delayed_script_hash_preimage[1][13] = Integer(32, 0, PUBLIC); //0x00000000; 
+  customer_delayed_script_hash_preimage[1][14] = Integer(32, 0, PUBLIC); //0x00000000; 
+  customer_delayed_script_hash_preimage[1][15] = Integer(32, 896, PUBLIC); 
+
+  Integer customer_delayed_script_hash[8];
+
+  computeSHA256_2d(customer_delayed_script_hash_preimage, customer_delayed_script_hash);
+
+  // 150 bytes
+  Integer hash_outputs_preimage[3][16];
+
+  Balance_d little_endian_balance_cust = convert_to_little_endian(new_state_d.balance_cust);
+  Balance_d little_endian_balance_merch = convert_to_little_endian(new_state_d.balance_merch);
+
+  hash_outputs_preimage[0][0]  = little_endian_balance_cust.balance[0];// first bytes of customer balance // FIX ENDIANNESS
+  hash_outputs_preimage[0][1]  = little_endian_balance_cust.balance[1];// second bytes of customer blanace // FIX ENDIANNESS
+  hash_outputs_preimage[0][2]  = Integer(32, 570433536 /*0x22002000*/, PUBLIC) | (customer_delayed_script_hash[0] >> 24); // OPCODE and the first byte of the prev hash output
+  hash_outputs_preimage[0][3]  = (customer_delayed_script_hash[0] << 8) | (customer_delayed_script_hash[1] >> 24); // end of byte 1 and first byte of 2...
+  hash_outputs_preimage[0][4]  = (customer_delayed_script_hash[1] << 8) | (customer_delayed_script_hash[2] >> 24);
+  hash_outputs_preimage[0][5]  = (customer_delayed_script_hash[2] << 8) | (customer_delayed_script_hash[3] >> 24);
+  hash_outputs_preimage[0][6]  = (customer_delayed_script_hash[3] << 8) | (customer_delayed_script_hash[4] >> 24);
+  hash_outputs_preimage[0][7]  = (customer_delayed_script_hash[4] << 8) | (customer_delayed_script_hash[5] >> 24);
+  hash_outputs_preimage[0][8]  = (customer_delayed_script_hash[5] << 8) | (customer_delayed_script_hash[6] >> 24);
+  hash_outputs_preimage[0][9]  = (customer_delayed_script_hash[6] << 8) | (customer_delayed_script_hash[7] >> 24);
+  hash_outputs_preimage[0][10] = (customer_delayed_script_hash[7] << 8) |  (little_endian_balance_merch.balance[0] >> 24);/*first byte of merch balance >> 24*/;
+  hash_outputs_preimage[0][11] =  (little_endian_balance_merch.balance[0] << 8) | (little_endian_balance_merch.balance[1] >> 24);
+  hash_outputs_preimage[0][12] =  (little_endian_balance_merch.balance[1] << 8) | Integer(32, 22 /*0x00000016*/, PUBLIC);
+  hash_outputs_preimage[0][13] = Integer(32, 1310720 /*0x00140000*/, PUBLIC) | (merch_publickey_hash_d.hash[0] >> 16);
+  hash_outputs_preimage[0][14] = (merch_publickey_hash_d.hash[0] << 16) | (merch_publickey_hash_d.hash[1] >> 16);
+  hash_outputs_preimage[0][15] = (merch_publickey_hash_d.hash[1] << 16) | (merch_publickey_hash_d.hash[2] >> 16);
+  hash_outputs_preimage[1][0]  = (merch_publickey_hash_d.hash[2] << 16) | (merch_publickey_hash_d.hash[3] >> 16);
+  hash_outputs_preimage[1][1]  = (merch_publickey_hash_d.hash[3] << 16) | (merch_publickey_hash_d.hash[4] >> 16);
+  hash_outputs_preimage[1][2]  = (merch_publickey_hash_d.hash[4] << 16) | Integer(32, 0 /*0x00000000*/, PUBLIC); //Two bytes of the OP_Return Amount
+  hash_outputs_preimage[1][3]  = Integer(32, 0, PUBLIC); // middle 4 bytes of OP_RETURN amount
+  hash_outputs_preimage[1][4]  = Integer(32, 17258/*0x0000376a*/,PUBLIC); // OPRETURN FORMATTING 
+  hash_outputs_preimage[1][5] = Integer(32, 1090519040/*0x41000000*/,PUBLIC)/*last byte of opreturn formatting */ | (new_state_d.rl.revlock[0] >> 8); 
+
+  hash_outputs_preimage[1][6]  = (new_state_d.rl.revlock[0] << 24) | (new_state_d.rl.revlock[1] >> 8); 
+  hash_outputs_preimage[1][7]  = (new_state_d.rl.revlock[1] << 24) | (new_state_d.rl.revlock[2] >> 8);
+  hash_outputs_preimage[1][8]  = (new_state_d.rl.revlock[2] << 24) | (new_state_d.rl.revlock[3] >> 8);
+  hash_outputs_preimage[1][9]  = (new_state_d.rl.revlock[3] << 24) | (new_state_d.rl.revlock[4] >> 8);
+  hash_outputs_preimage[1][10]  = (new_state_d.rl.revlock[4] << 24) | (new_state_d.rl.revlock[5] >> 8);
+  hash_outputs_preimage[1][11] = (new_state_d.rl.revlock[5] << 24) | (new_state_d.rl.revlock[6] >> 8);
+  hash_outputs_preimage[1][12] = (new_state_d.rl.revlock[6] << 24) | (new_state_d.rl.revlock[7] >> 8);
+  hash_outputs_preimage[1][13] = (new_state_d.rl.revlock[7] << 24) | (cust_payout_pub_key_d.key[0] >> 8); //1
+  hash_outputs_preimage[1][14] = (cust_payout_pub_key_d.key[0] << 24) | (cust_payout_pub_key_d.key[1] >> 8); //5
+  hash_outputs_preimage[1][15] = (cust_payout_pub_key_d.key[1] << 24) | (cust_payout_pub_key_d.key[2] >> 8); //9
+  hash_outputs_preimage[2][0] = (cust_payout_pub_key_d.key[2] << 24) | (cust_payout_pub_key_d.key[3] >> 8); //13
+  hash_outputs_preimage[2][1]  = (cust_payout_pub_key_d.key[3] << 24) | (cust_payout_pub_key_d.key[4] >> 8); //17
+  hash_outputs_preimage[2][2]  = (cust_payout_pub_key_d.key[4] << 24) | (cust_payout_pub_key_d.key[5] >> 8); //21
+  hash_outputs_preimage[2][3]  = (cust_payout_pub_key_d.key[5] << 24) | (cust_payout_pub_key_d.key[6] >> 8); //25
+  hash_outputs_preimage[2][4]  = (cust_payout_pub_key_d.key[6] << 24) | (cust_payout_pub_key_d.key[7] >> 8); //29
+  hash_outputs_preimage[2][5]  = (cust_payout_pub_key_d.key[7] << 24) | (cust_payout_pub_key_d.key[8] >> 8) | Integer(32,32768 /*0x00008000*/, PUBLIC); //33
+
+  hash_outputs_preimage[2][6]  = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][7]  = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][8]  = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][9]  = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][10] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][11] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][12] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][13] = Integer(32,0,PUBLIC);
+  hash_outputs_preimage[2][14] = Integer(32, 0, PUBLIC); //0x00000000; 
+  hash_outputs_preimage[2][15] = Integer(32, 1200, PUBLIC); 
+
+  Integer hash_outputs[8];
+
+  computeDoubleSHA256_3d(hash_outputs_preimage, hash_outputs);
+
+  // The total preimage is 228 bytes
+  Integer total_preimage[4][16];
+
+  total_preimage[0][0] = Integer(32, 33554432 /*0x02000000*/, PUBLIC);
+  total_preimage[0][1] = new_state_d.HashPrevOuts_escrow.txid[0];
+  total_preimage[0][2] = new_state_d.HashPrevOuts_escrow.txid[1];
+  total_preimage[0][3] = new_state_d.HashPrevOuts_escrow.txid[2];
+  total_preimage[0][4] = new_state_d.HashPrevOuts_escrow.txid[3];
+  total_preimage[0][5] = new_state_d.HashPrevOuts_escrow.txid[4];
+  total_preimage[0][6] = new_state_d.HashPrevOuts_escrow.txid[5];
+  total_preimage[0][7] = new_state_d.HashPrevOuts_escrow.txid[6];
+  total_preimage[0][8] = new_state_d.HashPrevOuts_escrow.txid[7];
+
+  total_preimage[0][9]  =  Integer(32, 1001467945  /*0x3bb13029*/, PUBLIC);
+  total_preimage[0][10] =  Integer(32, 3464175445 /*0xce7b1f55*/, PUBLIC);
+  total_preimage[0][11] =  Integer(32, 2666915655 /*0x9ef5e747*/, PUBLIC);
+  total_preimage[0][12] =  Integer(32, 4239147935 /*0xfcac439f*/, PUBLIC);
+  total_preimage[0][13] =  Integer(32,  341156588 /*0x1455a2ec*/, PUBLIC);
+  total_preimage[0][14] =  Integer(32, 2086603191 /*0x7c5f09b7*/, PUBLIC);
+  total_preimage[0][15] =  Integer(32,  579893598 /*0x2290795e*/, PUBLIC);
+  total_preimage[1][0]  =  Integer(32, 1885753412  /*0x70665044*/, PUBLIC);
+
+  total_preimage[1][1] = new_state_d.txid_escrow.txid[0];
+  total_preimage[1][2] = new_state_d.txid_escrow.txid[1];
+  total_preimage[1][3] = new_state_d.txid_escrow.txid[2];
+  total_preimage[1][4] = new_state_d.txid_escrow.txid[3];
+  total_preimage[1][5] = new_state_d.txid_escrow.txid[4];
+  total_preimage[1][6] = new_state_d.txid_escrow.txid[5];
+  total_preimage[1][7] = new_state_d.txid_escrow.txid[6];
+  total_preimage[1][8] = new_state_d.txid_escrow.txid[7];
+
+  total_preimage[1][9] = Integer(32, 0 , PUBLIC);
+
+  total_preimage[1][10]  = Integer(32, 1196564736/*0x47522100*/, PUBLIC) | (merch_escrow_pub_key_d.key[0] >> 24);
+  total_preimage[1][11] = (merch_escrow_pub_key_d.key[0] << 8) | (merch_escrow_pub_key_d.key[1] >> 24);
+  total_preimage[1][12] = (merch_escrow_pub_key_d.key[1] << 8) | (merch_escrow_pub_key_d.key[2] >> 24);
+  total_preimage[1][13] = (merch_escrow_pub_key_d.key[2] << 8) | (merch_escrow_pub_key_d.key[3] >> 24);
+  total_preimage[1][14] = (merch_escrow_pub_key_d.key[3] << 8) | (merch_escrow_pub_key_d.key[4] >> 24);
+  total_preimage[1][15] = (merch_escrow_pub_key_d.key[4] << 8) | (merch_escrow_pub_key_d.key[5] >> 24);
+  total_preimage[2][0] = (merch_escrow_pub_key_d.key[5] << 8) | (merch_escrow_pub_key_d.key[6] >> 24);
+  total_preimage[2][1]  = (merch_escrow_pub_key_d.key[6] << 8) | (merch_escrow_pub_key_d.key[7] >> 24);
+  total_preimage[2][2]  = (merch_escrow_pub_key_d.key[7] << 8) | (merch_escrow_pub_key_d.key[8] >> 24);
+  total_preimage[2][3]  = Integer(32, 553648128 /*0x21000000*/, PUBLIC) | (cust_escrow_pub_key_d.key[0] >> 8);  // first three bytes of the cust public key
+  // 30 more bytes of key
+  total_preimage[2][4]  = (cust_escrow_pub_key_d.key[0] << 24)| (cust_escrow_pub_key_d.key[1] >> 8); 
+  total_preimage[2][5]  = (cust_escrow_pub_key_d.key[1] << 24)| (cust_escrow_pub_key_d.key[2] >> 8); 
+  total_preimage[2][6]  = (cust_escrow_pub_key_d.key[2] << 24)| (cust_escrow_pub_key_d.key[3] >> 8); 
+  total_preimage[2][7]  = (cust_escrow_pub_key_d.key[3] << 24)| (cust_escrow_pub_key_d.key[4] >> 8); 
+  total_preimage[2][8]  = (cust_escrow_pub_key_d.key[4] << 24)| (cust_escrow_pub_key_d.key[5] >> 8); 
+  total_preimage[2][9]  = (cust_escrow_pub_key_d.key[5] << 24)| (cust_escrow_pub_key_d.key[6] >> 8); 
+  total_preimage[2][10]  = (cust_escrow_pub_key_d.key[6] << 24)| (cust_escrow_pub_key_d.key[7] >> 8); 
+  total_preimage[2][11] = (cust_escrow_pub_key_d.key[7] << 24)| (cust_escrow_pub_key_d.key[8] >> 8) | Integer(32, 21166/*0x000052ae*/, PUBLIC);
+
+  Balance_d big_endian_total_amount = sum_balances(new_state_d.balance_cust, new_state_d.balance_merch);
+  Balance_d little_endian_total_amount = convert_to_little_endian(big_endian_total_amount);
+
+  total_preimage[2][12] = little_endian_total_amount.balance[0];
+  total_preimage[2][13] = little_endian_total_amount.balance[1];
+
+  total_preimage[2][14] = Integer(32, 4294967295 /*0xffffffff*/, PUBLIC);
+
+  total_preimage[2][15] = hash_outputs[0];
+  total_preimage[3][0] = hash_outputs[1];
+  total_preimage[3][1] = hash_outputs[2];
+  total_preimage[3][2]  = hash_outputs[3];
+  total_preimage[3][3]  = hash_outputs[4];
+  total_preimage[3][4]  = hash_outputs[5];
+  total_preimage[3][5]  = hash_outputs[6];
+  total_preimage[3][6]  = hash_outputs[7];
+
+  total_preimage[3][7]  = Integer(32, 0 /*0x00000000*/, PUBLIC);
+  total_preimage[3][8]  = Integer(32, 16777216 /*0x01000000*/, PUBLIC);
+
+  total_preimage[3][9]   = Integer(32, -2147483648/*0x80000000*/, PUBLIC); 
+  total_preimage[3][10]   = Integer(32, 0, PUBLIC);
+  total_preimage[3][11]   = Integer(32, 0, PUBLIC);
+  total_preimage[3][12]  = Integer(32, 0, PUBLIC);
+  total_preimage[3][13]  = Integer(32, 0, PUBLIC);
+  total_preimage[3][14]  = Integer(32, 0, PUBLIC); //0x00000000; 
+  total_preimage[3][15]  = Integer(32, 1824, PUBLIC); // 228*8 = 1824 bits
+
+  // Integer escrow_digest[8];
+  computeSHA256_4d(total_preimage, escrow_digest);
 }
 
 // mask pay and close tokens

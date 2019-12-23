@@ -333,3 +333,36 @@ EcdsaPartialSig_l localize_EcdsaPartialSig(EcdsaPartialSig_d psd){
 
   return to_return;
 }
+
+Balance_d convert_to_little_endian(Balance_d big_endian_balance) {
+  Balance_d little_endian_balance;
+
+  Integer mask_second_leftmost_byte(32, 16711680 /* 00ff0000 */, PUBLIC);
+  Integer mask_second_rightmost_byte(32, 65280 /* 0000ff00 */, PUBLIC);
+
+  little_endian_balance.balance[0] = ((big_endian_balance.balance[1]) << 24) 
+        | ((big_endian_balance.balance[1] & mask_second_rightmost_byte) << 8)
+        | ((big_endian_balance.balance[1] & mask_second_leftmost_byte) >> 8)
+        | ((big_endian_balance.balance[1]) >> 24); 
+
+  little_endian_balance.balance[1] = ((big_endian_balance.balance[0]) >> 24) 
+        | ((big_endian_balance.balance[0] & mask_second_rightmost_byte) >> 8)
+        | ((big_endian_balance.balance[0] & mask_second_leftmost_byte) << 8)
+        | ((big_endian_balance.balance[0]) << 24); 
+
+  return little_endian_balance;
+
+}
+Balance_d convert_to_big_endian(Balance_d little_endian_balance) {
+  Balance_d big_endian_balance;
+
+  return big_endian_balance;
+}
+
+Balance_d sum_balances(Balance_d lhs, Balance_d rhs) {
+  Balance_d to_return;
+
+  // TODO
+
+  return to_return;
+}

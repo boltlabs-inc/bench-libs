@@ -181,6 +181,11 @@ Mask_l localize_Mask(Mask_d mask);
 Balance_d distribute_Balance(Balance_l balance, int party);
 Balance_l localize_Balance(Balance_d balance);
 
+Balance_d convert_to_little_endian(Balance_d big_endian_balance);
+Balance_d convert_to_big_endian(Balance_d little_endian_balance);
+
+Balance_d sum_balances(Balance_d lhs, Balance_d rhs);
+
 BitcoinPublicKey_d distribute_BitcoinPublicKey(BitcoinPublicKey_l pubKey, int party);
 BitcoinPublicKey_l localize_BitcoinPublicKey(BitcoinPublicKey_d pubKey);
 
