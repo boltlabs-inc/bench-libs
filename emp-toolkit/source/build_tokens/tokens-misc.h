@@ -19,7 +19,7 @@ struct HMACKey_d {
 
 /* Revocation lock - TYPISSUE: not sure what type this is yet.
  * Tentatively sized to use a hash (SHA256-based) commitment scheme.
- * \param rl 	: a revocation lock.
+ * \param rl  : a revocation lock.
  */
 typedef struct RevLock_l RevLock_l;
 struct RevLock_d {
@@ -92,7 +92,7 @@ struct Balance_d {
 /* state type
  *
  * \param pkC           : customer public key 
- * \param rl 			: revocation lock for 
+ * \param rl      : revocation lock for 
  * \param balance_cust  : customer balance 
  * \param balance_merch : merchant balance
  * \param txid_merch    : transaction ID for merchant close transaction (bits, formatted as they appear in the 'source' field of a transaction that spends it) 
@@ -225,6 +225,7 @@ void issue_tokens(
   Nonce_l nonce_l,
   BitcoinPublicKey_l merch_escrow_pub_key_l,
   BitcoinPublicKey_l merch_dispute_key_l, 
+  BitcoinPublicKey_l merch_payout_pub_key_l,
   PublicKeyHash_l merch_publickey_hash_l,
 /* OUTPUTS */
   EcdsaPartialSig_l sig1, 
@@ -250,12 +251,12 @@ Bit verify_token_sig(HMACKeyCommitment_d commitment, HMACKey_d opening, State_d 
  * 3. merchant-close transactions match
  * 4. balances are correctly updated by amt
  *  
- * \param[in] old_state_d 	: old wallet
+ * \param[in] old_state_d   : old wallet
  * \param[in] new_state_d   : new wallet
  * \param[in] epsilon_d     : transaction amount
- * \param[in] wpk_old 	: old wallet ID
+ * \param[in] wpk_old   : old wallet ID
  *
- * \return b 	: success bit
+ * \return b  : success bit
  */
 Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_d rlc_d, Nonce_d nonce_d, Balance_d epsilon_d);
 
@@ -267,7 +268,7 @@ Bit compare_wallets(State_d old_state_d, State_d new_state_d, RevLockCommitment_
  * \param[in] w     : wallet object
  * \param[in] t     : commitment randomness (TYPISSUE)
  *
- * \return b 	: success bit
+ * \return b  : success bit
  */
 Bit open_commitment();
 
@@ -284,23 +285,23 @@ Bit verify_mask_commitment(Mask_d mask, MaskCommitment_d maskcommitment);
  *    for close_tx_merch, source is txid_merch
  *    for close_tx_escrow, source is txid_escrow
  * 
- * \param[in] w     			: wallet object
+ * \param[in] w           : wallet object
  * \param[in] close_tx_escrow   : (private) bits of new close transaction (spends from escrow). no more than 1024 bits.
  * \param[in] close_tx_merch    : (private) bits of new close transaction (spends from merchant close transaction). No more than 1024 bits.
  *
- * \return b 	: success bit
+ * \return b  : success bit
  */
 void validate_transactions(State_d new_state_d, 
   BitcoinPublicKey_d cust_escrow_pub_key_d, BitcoinPublicKey_d cust_payout_pub_key_d,
-  BitcoinPublicKey_d merch_escrow_pub_key_d, BitcoinPublicKey_d merch_dispute_key_d, PublicKeyHash_d merch_publickey_hash_d,
-  Integer escrow_digest[8]);
+  BitcoinPublicKey_d merch_escrow_pub_key_d, BitcoinPublicKey_d merch_dispute_key_d, BitcoinPublicKey_d merch_payout_pub_key_d, 
+  PublicKeyHash_d merch_publickey_hash_d, Integer escrow_digest[8], Integer merch_digest[8]);
 /* applies a mask to a pay token
  * uses a one-time-pad scheme (just xors mask with token bits)
  * Also checks to make sure that the mask matches the commited to randomness
  * 
  * updates the token in-line
  *
- * \param[in] mask 	: A random mask 
+ * \param[in] mask  : A random mask 
  * \param[in] token : Sequence of bits representing a token
  *
  */
