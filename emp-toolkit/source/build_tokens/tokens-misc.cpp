@@ -362,7 +362,24 @@ Balance_d convert_to_big_endian(Balance_d little_endian_balance) {
 Balance_d sum_balances(Balance_d lhs, Balance_d rhs) {
   Balance_d to_return;
 
-  // TODO
+  Integer result(64, 0, PUBLIC);
+  Integer lhs_upper_copy(lhs.balance[0]);
+  Integer lhs_lower_copy(lhs.balance[1]);
+
+  lhs_upper_copy.resize(64, false);
+  lhs_lower_copy.resize(64, false);
+
+  Integer rhs_upper_copy(rhs.balance[0]);
+  Integer rhs_lower_copy(rhs.balance[1]);
+
+  rhs_upper_copy.resize(64, false);
+  rhs_lower_copy.resize(64, false);
+
+  result = lhs_lower_copy + rhs_lower_copy + (lhs_upper_copy<<32) + (rhs_upper_copy<<32);
+  Integer result_dup(result);
+
+  to_return.balance[0] = result.resize(32);
+  to_return.balance[1] = (result_dup<<32).resize(32);
 
   return to_return;
 }
