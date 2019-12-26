@@ -41,5 +41,6 @@ add_test (sha256)
 add_test (ecdsa)
 add_test (hmac)
 add_test (bitcoin)
+add_test (misc_tests)
 
 

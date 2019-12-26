@@ -340,21 +340,34 @@ Balance_d convert_to_little_endian(Balance_d big_endian_balance) {
   Integer mask_second_leftmost_byte(32, 16711680 /* 00ff0000 */, PUBLIC);
   Integer mask_second_rightmost_byte(32, 65280 /* 0000ff00 */, PUBLIC);
 
-  little_endian_balance.balance[0] = ((big_endian_balance.balance[1]) << 24) 
+  little_endian_balance.balance[0] = ((big_endian_balance.balance[1]) << 24)
         | ((big_endian_balance.balance[1] & mask_second_rightmost_byte) << 8)
         | ((big_endian_balance.balance[1] & mask_second_leftmost_byte) >> 8)
-        | ((big_endian_balance.balance[1]) >> 24); 
+        | ((big_endian_balance.balance[1]) >> 24);
 
-  little_endian_balance.balance[1] = ((big_endian_balance.balance[0]) >> 24) 
-        | ((big_endian_balance.balance[0] & mask_second_rightmost_byte) >> 8)
-        | ((big_endian_balance.balance[0] & mask_second_leftmost_byte) << 8)
-        | ((big_endian_balance.balance[0]) << 24); 
+  little_endian_balance.balance[1] = ((big_endian_balance.balance[0]) << 24)
+        | ((big_endian_balance.balance[0] & mask_second_rightmost_byte) << 8)
+        | ((big_endian_balance.balance[0] & mask_second_leftmost_byte) >> 8)
+        | ((big_endian_balance.balance[0]) >> 24);
 
   return little_endian_balance;
 
 }
 Balance_d convert_to_big_endian(Balance_d little_endian_balance) {
   Balance_d big_endian_balance;
+
+  Integer mask_second_leftmost_byte(32, 16711680 /* 00ff0000 */, PUBLIC);
+  Integer mask_second_rightmost_byte(32, 65280 /* 0000ff00 */, PUBLIC);
+
+  big_endian_balance.balance[0] = ((little_endian_balance.balance[1]) << 24)
+        | ((little_endian_balance.balance[1] & mask_second_rightmost_byte) << 8)
+        | ((little_endian_balance.balance[1] & mask_second_leftmost_byte) >> 8)
+        | ((little_endian_balance.balance[1]) >> 24);
+
+  big_endian_balance.balance[1] = ((little_endian_balance.balance[0]) << 24)
+        | ((little_endian_balance.balance[0] & mask_second_rightmost_byte) << 8)
+        | ((little_endian_balance.balance[0] & mask_second_leftmost_byte) >> 8)
+        | ((little_endian_balance.balance[0]) >> 24);
 
   return big_endian_balance;
 }
@@ -363,11 +376,15 @@ Balance_d sum_balances(Balance_d lhs, Balance_d rhs) {
   Balance_d to_return;
 
   Integer result(64, 0, PUBLIC);
+
   Integer lhs_upper_copy(lhs.balance[0]);
   Integer lhs_lower_copy(lhs.balance[1]);
 
   lhs_upper_copy.resize(64, false);
   lhs_lower_copy.resize(64, false);
+
+  Integer lhs_composed = lhs_upper_copy;
+  lhs_composed = (lhs_composed<<32) | lhs_lower_copy;
 
   Integer rhs_upper_copy(rhs.balance[0]);
   Integer rhs_lower_copy(rhs.balance[1]);
@@ -375,7 +392,10 @@ Balance_d sum_balances(Balance_d lhs, Balance_d rhs) {
   rhs_upper_copy.resize(64, false);
   rhs_lower_copy.resize(64, false);
 
-  result = lhs_lower_copy + rhs_lower_copy + (lhs_upper_copy<<32) + (rhs_upper_copy<<32);
+  Integer rhs_composed = rhs_upper_copy;
+  rhs_composed = (rhs_composed<<32) | rhs_lower_copy;
+
+  result = rhs_composed + lhs_composed;
   Integer result_dup(result);
 
   to_return.balance[0] = result.resize(32);
