@@ -377,29 +377,23 @@ Balance_d sum_balances(Balance_d lhs, Balance_d rhs) {
 
   Integer result(64, 0, PUBLIC);
 
-  Integer lhs_upper_copy(lhs.balance[0]);
-  Integer lhs_lower_copy(lhs.balance[1]);
+  lhs.balance[0].resize(64, true);
+  lhs.balance[1].resize(64, true);
 
-  lhs_upper_copy.resize(64, false);
-  lhs_lower_copy.resize(64, false);
+  Integer lhs_composed = lhs.balance[1];
+  lhs_composed = (lhs_composed<<32) | lhs.balance[0];
 
-  Integer lhs_composed = lhs_upper_copy;
-  lhs_composed = (lhs_composed<<32) | lhs_lower_copy;
+  rhs.balance[0].resize(64, true);
+  rhs.balance[1].resize(64, true);
 
-  Integer rhs_upper_copy(rhs.balance[0]);
-  Integer rhs_lower_copy(rhs.balance[1]);
-
-  rhs_upper_copy.resize(64, false);
-  rhs_lower_copy.resize(64, false);
-
-  Integer rhs_composed = rhs_upper_copy;
-  rhs_composed = (rhs_composed<<32) | rhs_lower_copy;
+  Integer rhs_composed = rhs.balance[1];
+  rhs_composed = (rhs_composed<<32) | rhs.balance[0];
 
   result = rhs_composed + lhs_composed;
   Integer result_dup(result);
 
   to_return.balance[0] = result.resize(32);
-  to_return.balance[1] = (result_dup<<32).resize(32);
+  to_return.balance[1] = (result_dup>>32).resize(32);
 
   return to_return;
 }
